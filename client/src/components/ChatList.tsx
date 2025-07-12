@@ -1,18 +1,50 @@
-import React from "react";
+"use client"
+import React, { useEffect, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import Link from "next/link";
-import { useParams } from "next/navigation"; // Add this
+import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 
-const chats = [
-  { id: 1, title: "Tailwind Classes", date: "12 Mar" },
-  { id: 2, title: "explain quantum computing", date: "10 Feb" },
-  { id: 3, title: "How to create ERP Diagram", date: "22 Jan" },
-  { id: 4, title: "API Scaling Strategies", date: "1 Jan" },
-];
+type Chat = {
+  id: string | number;
+  title: string;
+  date: string;
+};
 
 const ChatList: React.FC = () => {
-  const params = useParams(); // params will be { id: '2', ... } if you're on /chat/2
-  const activeId = params?.id; // May be undefined if not on /chat/[id]
+  const params = useParams();
+  const activeId = params?.id;
+
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
+const { data: session, status } = useSession();
+  // Fetch chats from API
+  useEffect(() => {
+     if (status !== "authenticated") return;
+    async function fetchChats() {
+      try {
+        setLoading(true);
+        setError("");
+        // Adjust the endpoint as needed!
+            const response = await fetch("http://localhost:8080/api/chat-threads", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session?.user.jwtToken}`,
+      },
+    });
+        if (!response.ok) throw new Error("Failed to fetch chats");
+        const data = await response.json();
+        setChats(data);
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchChats();
+  }, []);
 
   return (
     <div className="mx-2 mt-8 space-y-4">
@@ -39,11 +71,13 @@ const ChatList: React.FC = () => {
         </div>
       </form>
 
-      {/* Chat list */}
-      {chats.map((chat) => {
-        // Ensure both are strings for comparison (Next.js provides params as string)
-        const isActive = String(chat.id) === String(activeId);
+      {/* Loading and error states */}
+      {loading && <div className="text-slate-500 p-4 text-center text-xs">Loading chats...</div>}
+      {error && <div className="text-red-500 p-4 text-center text-xs">{error}</div>}
 
+      {/* Chat list */}
+      {/* {!loading && !error && chats.map((chat) => {
+        const isActive = String(chat.id) === String(activeId);
         return (
           <Link
             key={chat.id}
@@ -60,7 +94,7 @@ const ChatList: React.FC = () => {
             <p className="text-xs text-slate-500 dark:text-slate-400">{chat.date}</p>
           </Link>
         )
-      })}
+      })} */}
     </div>
   );
 };

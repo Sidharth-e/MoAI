@@ -24,7 +24,7 @@ app.use(cors());
 // routes
 app.use("/api/user",verifyToken, userRoutes);
 app.use("/huggingFace/redye",verifyToken,  huggingFaceRoute);
-app.use("/api/chat",verifyToken,  chatRoute);
+app.use("/api/chat",chatRoute);
 app.use("/api/chat-threads", verifyToken, chatThreadRoutes);       // For chat threads (list, create)
 app.use("/api/chat-messages", verifyToken, chatMessageRoutes);     // For chat messages (post, get by thread)
 app.use("/api/email",verifyToken,  emailValidationRoutes);  

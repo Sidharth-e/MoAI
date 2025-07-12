@@ -6,8 +6,7 @@ router.post("/", async (req, res) => {
   try {
     const { error } = validate(req.body);
     const userId = req.user._id; // adjust as per your authentication
-    if (error) return res.status(400).send({ message: error.details[0].message });
-
+    if (error) return res.status(400).send({ message: error.details[0].message })
     const thread = new ChatThread({ userId, ...req.body });
     await thread.save();
     res.status(201).send({ message: "Chat thread created", thread });
