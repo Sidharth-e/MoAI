@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 
 type Chat = {
-  id: string | number;
+  _id: string | number;
   title: string;
   date: string;
 };
@@ -36,7 +36,9 @@ const { data: session, status } = useSession();
     });
         if (!response.ok) throw new Error("Failed to fetch chats");
         const data = await response.json();
-        setChats(data);
+        console.log(data);
+        
+        setChats(data.threads);
       } catch (err: any) {
         setError(err.message || "Unknown error");
       } finally {
@@ -44,7 +46,7 @@ const { data: session, status } = useSession();
       }
     }
     fetchChats();
-  }, []);
+  }, [session, status]);
 
   return (
     <div className="mx-2 mt-8 space-y-4">
@@ -76,12 +78,12 @@ const { data: session, status } = useSession();
       {error && <div className="text-red-500 p-4 text-center text-xs">{error}</div>}
 
       {/* Chat list */}
-      {/* {!loading && !error && chats.map((chat) => {
-        const isActive = String(chat.id) === String(activeId);
+      {!loading && !error && chats.map((chat) => {
+        const isActive = String(chat._id) === String(activeId);
         return (
           <Link
-            key={chat.id}
-            href={`/chat/${chat.id}`}
+            key={chat._id}
+            href={`/chat/${chat._id}`}
             className={`flex w-full flex-col gap-y-2 rounded-lg px-3 py-2 text-left transition-colors duration-200 focus:outline-none ${
               isActive
                 ? "bg-slate-200 dark:bg-slate-800"
@@ -94,7 +96,7 @@ const { data: session, status } = useSession();
             <p className="text-xs text-slate-500 dark:text-slate-400">{chat.date}</p>
           </Link>
         )
-      })} */}
+      })}
     </div>
   );
 };
