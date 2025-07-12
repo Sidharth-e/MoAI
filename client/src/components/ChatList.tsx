@@ -1,52 +1,14 @@
-"use client"
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { FiSearch } from "react-icons/fi";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useParams } from "next/navigation"; // Add this
+import { useChatThreads } from "@/contexts/ChatThreadsContext";
 
-type Chat = {
-  _id: string | number;
-  title: string;
-  date: string;
-};
 
 const ChatList: React.FC = () => {
-  const params = useParams();
-  const activeId = params?.id;
-
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
-const { data: session, status } = useSession();
-  // Fetch chats from API
-  useEffect(() => {
-     if (status !== "authenticated") return;
-    async function fetchChats() {
-      try {
-        setLoading(true);
-        setError("");
-        // Adjust the endpoint as needed!
-            const response = await fetch("http://localhost:8080/api/chat-threads", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session?.user.jwtToken}`,
-      },
-    });
-        if (!response.ok) throw new Error("Failed to fetch chats");
-        const data = await response.json();
-        console.log(data);
-        
-        setChats(data.threads);
-      } catch (err: any) {
-        setError(err.message || "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchChats();
-  }, [session, status]);
+  const { chatThreads } = useChatThreads();
+  const params = useParams(); // params will be { id: '2', ... } if you're on /chat/2
+  const activeId = params?.id; // May be undefined if not on /chat/[id]
 
   return (
     <div className="mx-2 mt-8 space-y-4">
@@ -73,13 +35,11 @@ const { data: session, status } = useSession();
         </div>
       </form>
 
-      {/* Loading and error states */}
-      {loading && <div className="text-slate-500 p-4 text-center text-xs">Loading chats...</div>}
-      {error && <div className="text-red-500 p-4 text-center text-xs">{error}</div>}
-
       {/* Chat list */}
-      {!loading && !error && chats.map((chat) => {
+      {chatThreads.map((chat) => {
+        // Ensure both are strings for comparison (Next.js provides params as string)
         const isActive = String(chat._id) === String(activeId);
+
         return (
           <Link
             key={chat._id}
@@ -93,7 +53,7 @@ const { data: session, status } = useSession();
             <h1 className="text-sm font-medium capitalize text-slate-700 dark:text-slate-200">
               {chat.title}
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{chat.date}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{chat.createdAt}</p>
           </Link>
         )
       })}

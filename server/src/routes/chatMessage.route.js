@@ -4,11 +4,11 @@ const { ChatMessage, validate } = require("../models/chatMessage");
 // Create a message in a thread
 router.post("/:threadId", async (req, res) => {
   try {
-    // You might get sender from req.user if you have authentication
-    // Or pass in as parameter (validate checks this)
     const { error } = validate({ ...req.body, threadId: req.params.threadId });
+    console.log(error);
+    console.log(req.params.threadId);
+    
     if (error) return res.status(400).send({ message: error.details[0].message });
-
     const message = new ChatMessage({
       ...req.body,
       threadId: req.params.threadId,

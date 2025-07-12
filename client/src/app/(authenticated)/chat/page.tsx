@@ -3,6 +3,9 @@
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
+import { threadId } from "worker_threads";
+import { send } from "process";
+import { useChatThreads } from "@/contexts/ChatThreadsContext";
 
 const features = [
   {
@@ -73,25 +76,54 @@ const features = [
 
 const HomePage: React.FC = () => {
   const [message, setMessage] = useState("");
+  const { refreshThreads } = useChatThreads();
   const { data: session } = useSession();
   const router = useRouter();
 
-  const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // 👈 Prevent form reload
+const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    const res = await fetch("http://localhost:8080/api/chat-threads", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session?.user.jwtToken}`,
-      },
-      body: JSON.stringify({ title: "New Chat" }),
-    });
-    const data = await res.json();
-    // To see the actual response content:
-    console.log(data);
-    router.push(`/chat/${data.thread._id}`);
-  };
+  // Create thread
+  const res = await fetch("http://localhost:8080/api/chat-threads", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.user.jwtToken}`,
+    },
+    body: JSON.stringify({ title: "New Chat" }),
+  });
+
+  if (!res.ok) {
+    // Handle error (show user, etc)
+    console.error("Failed to create thread");
+    return;
+  }
+
+  const data = await res.json();
+  await refreshThreads();
+
+  // Add message to thread
+  const chatMessageRes = await fetch(`http://localhost:8080/api/chat-messages/${data.thread._id}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.user.jwtToken}`,
+    },
+    body: JSON.stringify({
+      text: message,
+      sender: "user" // If your backend expects this
+      // threadId: data.thread._id // probably unnecessary
+    }),
+  });
+
+  if (!chatMessageRes.ok) {
+    console.error("Failed to create message");
+    return;
+  }
+
+  // Navigate to new thread
+  router.push(`/chat/${data.thread._id}`);
+};
 
   return (
     <main className="flex-grow h-full overflow-hidden bg-slate-50 dark:bg-slate-900 relative overflow-hidden flex flex-col">

@@ -1,44 +1,72 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, FormEvent } from "react";
 import ChatMessage from "./ChatMessage";
+import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 
+// ---- Types ---- //
 type Message = {
-  role: "user" | "ai";
+  role: "user" | "assistant";
   content: string;
 };
 
+// ---- Helpers ---- //
+const API_BASE = "http://localhost:8080/api";
+
+const getAuthHeaders = (token?: string, extra?: Record<string, string>) => ({
+  ...(extra || {}),
+  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+});
+
+const mapMessage = (m: any): Message => ({
+  role: m.sender === "user" ? "user" : "assistant",
+  content: m.text,
+});
+
+const scrollToBottom = (ref: React.RefObject<HTMLDivElement | null>) => {
+  if (ref.current) {
+    ref.current.scrollTo(0, ref.current.scrollHeight);
+  }
+};
+
+const ERROR_MSG = "[Error receiving response]";
+const ERROR_HISTORY_MSG = "[Error loading history]";
+
+// ---- Main Component ---- //
 const ChatContainer: React.FC = () => {
+  const { data: session } = useSession();
+  const { id } = useParams();
+  const jwtToken = session?.user.jwtToken;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
 
-  // Stream output from the real backend
-  async function fetchAndStreamResponse(prompt: string) {
+  // Handles streaming AI response, pushes partials live
+  const fetchAndStreamResponse = async (prompt: string) => {
     setStreaming(true);
-
-    setMessages((prev) => [...prev, { role: "ai", content: "" }]);
-
+    setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+    let assistantMessage = "";
     try {
-      const res = await fetch("http://localhost:8080/api/chat", {
+      const res = await fetch(`${API_BASE}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...getAuthHeaders(jwtToken),
         },
-        
         body: JSON.stringify({ userMessage: prompt }),
       });
 
       if (!res.body) throw new Error("No response body");
 
       const reader = res.body.getReader();
-      let decoder = new TextDecoder();
+      const decoder = new TextDecoder();
       let buffer = "";
       let done = false;
 
       while (!done) {
-        const { value, done: readDone } = await reader.read();
-        done = readDone;
+        const { value, done: isDone } = await reader.read();
+        done = isDone;
         if (value) {
           buffer += decoder.decode(value, { stream: true });
           let lines = buffer.split("\n");
@@ -50,11 +78,10 @@ const ChatContainer: React.FC = () => {
             if (data === "[DONE]") continue;
             try {
               const json = JSON.parse(data);
-              const delta: string | undefined =
-                json.choices?.[0]?.delta?.content;
+              const delta: string | undefined = json.choices?.[0]?.delta?.content;
               if (delta !== undefined) {
-                setMessages((prev) => {
-                  // Append new delta fragment to last AI message
+                assistantMessage += delta;
+                setMessages(prev => {
                   const arr = [...prev];
                   arr[arr.length - 1] = {
                     ...arr[arr.length - 1],
@@ -62,12 +89,7 @@ const ChatContainer: React.FC = () => {
                   };
                   return arr;
                 });
-                setTimeout(() => {
-                  outputRef.current?.scrollTo(
-                    0,
-                    outputRef.current.scrollHeight
-                  );
-                }, 0);
+                setTimeout(() => scrollToBottom(outputRef), 0);
               }
             } catch (e) {
               console.error("Error parsing chunk", e, data);
@@ -76,26 +98,80 @@ const ChatContainer: React.FC = () => {
         }
       }
     } catch (err) {
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev.slice(0, -1),
-        { role: "ai", content: "[Error receiving response]" },
+        { role: "assistant", content: ERROR_MSG },
       ]);
     } finally {
       setStreaming(false);
-      setTimeout(() => {
-        outputRef.current?.scrollTo(0, outputRef.current.scrollHeight);
-      }, 100);
+      setTimeout(() => scrollToBottom(outputRef), 100);
+      // Persist the assistant message
+      await fetch(`${API_BASE}/chat-messages/${id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(jwtToken),
+        },
+        body: JSON.stringify({
+          text: assistantMessage,
+          sender: "assistant",
+        }),
+      });
     }
-  }
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!input.trim() || streaming) return;
-
-    setMessages((msgs) => [...msgs, { role: "user", content: input }]);
+    // Persist user message
+    await fetch(`${API_BASE}/chat-messages/${id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(jwtToken),
+      },
+      body: JSON.stringify({
+        text: input,
+        sender: "user",
+      }),
+    });
+    setMessages(msgs => [...msgs, { role: "user", content: input }]);
     await fetchAndStreamResponse(input);
     setInput("");
   };
+
+  // Fetch chat history on load
+  useEffect(() => {
+    if (!id) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/chat-messages/${id}`, {
+          headers: getAuthHeaders(jwtToken),
+        });
+        if (!res.ok) throw new Error("Failed to fetch messages");
+        const data = await res.json();
+        if (Array.isArray(data.messages)) {
+          if (!mounted) return;
+          setMessages(data.messages.map(mapMessage));
+          // If only a single prompt, initiate an immediate response
+          if (data.messages.length === 1) {
+            fetchAndStreamResponse(data.messages[0].text);
+          }
+        }
+      } catch (error) {
+        if (!mounted) return;
+        setMessages([{ role: "assistant", content: ERROR_HISTORY_MSG }]);
+      }
+    })();
+    return () => { mounted = false; };
+    // eslint-disable-next-line
+  }, [id, jwtToken]);
+
+  // Auto-scroll to latest message on message update
+  useEffect(() => {
+    scrollToBottom(outputRef);
+  }, [messages]);
 
   return (
     <div className="flex flex-col h-full w-full bg-slate-200 p-4 text-sm leading-6 text-slate-900 dark:bg-slate-800 dark:text-slate-300 sm:text-base sm:leading-7">
@@ -119,7 +195,7 @@ const ChatContainer: React.FC = () => {
             placeholder="Enter your prompt…"
             required
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={e => setInput(e.target.value)}
             disabled={streaming}
             rows={1}
           />

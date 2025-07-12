@@ -7,13 +7,13 @@ import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
 
 type ChatMessageProps = {
-  role: "user" | "ai";
+  role: "user" | "assistant";
   content: string;
 };
 
 const avatarUrl = {
   user: "https://dummyimage.com/256x256/363536/ffffff&text=U",
-  ai: "https://dummyimage.com/256x256/354ea1/ffffff&text=G"
+  assistant: "https://dummyimage.com/256x256/354ea1/ffffff&text=G"
 };
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ role, content }) => (

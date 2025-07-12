@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ClientRoot from "./ClientRoot";
 
 export const metadata: Metadata = {
   title: "MOAI",
@@ -14,7 +15,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        
+        <ClientRoot>{children}</ClientRoot>
       </body>
     </html>
   );

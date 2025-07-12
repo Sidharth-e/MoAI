@@ -18,7 +18,7 @@ const ChatMessage = mongoose.model("ChatMessage", chatMessageSchema);
 const validate = (data) => {
   const schema = Joi.object({
     threadId: Joi.string().required().label("Thread ID"),
-    sender: Joi.string().valid("user", "ai").required().label("Sender"),
+    sender: Joi.string().valid("user", "assistant").required().label("Sender"),
     text: Joi.string().required().label("Message Text"),
   });
   return schema.validate(data);
