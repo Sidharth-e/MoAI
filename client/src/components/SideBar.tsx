@@ -50,7 +50,7 @@ const getLinkClasses = (path: string) =>
         </button>
         {/* New conversation */}
         <Link
-          href="#"
+          href="/"
          className={getLinkClasses("/discover")}
         >
           <FiPlus size={24} />

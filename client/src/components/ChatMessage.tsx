@@ -3,8 +3,13 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 
-// Optionally import a highlight.js theme for syntax highlighting
-import "highlight.js/styles/github.css";
+
+// Dark themes
+// import 'highlight.js/styles/monokai-sublime.css';  // High contrast, colorful
+// import 'highlight.js/styles/atom-one-dark.css';    // Popular VS Code-like
+// import 'highlight.js/styles/vs2015.css';           // Visual Studio 2015 style
+import 'highlight.js/styles/base16/dracula.css';   // Trendy Dracula theme
+
 
 type ChatMessageProps = {
   role: "user" | "assistant";
@@ -27,17 +32,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ role, content }) => (
     <img
       className="h-8 w-8 rounded-full"
       src={avatarUrl[role]}
-      alt={role === "user" ? "User" : "AI"}
+      alt={role === "user" ? "user" : "assistant"}
     />
-    <div className="flex max-w-3xl items-center">
-      <div className="prose prose-slate dark:prose-invert max-w-none">
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeHighlight]}
-        >
-          {content}
-        </ReactMarkdown>
-      </div>
+    <div className="flex-1 min-w-0">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   </div>
 );
