@@ -3,8 +3,7 @@ import React, { useState, useRef, useEffect, FormEvent } from "react";
 import ChatMessage from "./ChatMessage";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Send } from "lucide-react";
-
+import { MoveUp, Send } from "lucide-react";
 
 // ---- Types ---- //
 type Message = {
@@ -43,11 +42,12 @@ const ChatContainer: React.FC = () => {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
+  const maxLength = 10000;
 
   // Handles streaming AI response, pushes partials live
   const fetchAndStreamResponse = async (prompt: string) => {
     setStreaming(true);
-    setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
     let assistantMessage = "";
     try {
       const res = await fetch(`${API_BASE}/chat`, {
@@ -56,7 +56,7 @@ const ChatContainer: React.FC = () => {
           "Content-Type": "application/json",
           ...getAuthHeaders(jwtToken),
         },
-        body: JSON.stringify({ userMessage: prompt,threadId:id }),
+        body: JSON.stringify({ userMessage: prompt, threadId: id }),
       });
 
       if (!res.body) throw new Error("No response body");
@@ -80,10 +80,11 @@ const ChatContainer: React.FC = () => {
             if (data === "[DONE]") continue;
             try {
               const json = JSON.parse(data);
-              const delta: string | undefined = json.choices?.[0]?.delta?.content;
+              const delta: string | undefined =
+                json.choices?.[0]?.delta?.content;
               if (delta !== undefined) {
                 assistantMessage += delta;
-                setMessages(prev => {
+                setMessages((prev) => {
                   const arr = [...prev];
                   arr[arr.length - 1] = {
                     ...arr[arr.length - 1],
@@ -100,7 +101,7 @@ const ChatContainer: React.FC = () => {
         }
       }
     } catch (err) {
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev.slice(0, -1),
         { role: "assistant", content: ERROR_MSG },
       ]);
@@ -137,7 +138,7 @@ const ChatContainer: React.FC = () => {
         sender: "user",
       }),
     });
-    setMessages(msgs => [...msgs, { role: "user", content: input }]);
+    setMessages((msgs) => [...msgs, { role: "user", content: input }]);
     await fetchAndStreamResponse(input);
     setInput("");
   };
@@ -166,7 +167,9 @@ const ChatContainer: React.FC = () => {
         setMessages([{ role: "assistant", content: ERROR_HISTORY_MSG }]);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
     // eslint-disable-next-line
   }, [id, jwtToken]);
 
@@ -175,48 +178,45 @@ const ChatContainer: React.FC = () => {
     scrollToBottom(outputRef);
   }, [messages]);
 
-return (
-<div
-  ref={outputRef}
-  className="h-full w-full overflow-y-auto bg-slate-200 text-sm leading-6 text-slate-900 dark:bg-slate-800 dark:text-slate-300 sm:text-base sm:leading-7 flex flex-col"
->
-
-    <div className="flex-1  px-4 pt-4 space-y-2 py-10 ">
-      {messages.map((msg, i) => (
-        <ChatMessage key={i} role={msg.role} content={msg.content} />
-      ))}
-    </div>
- <form
-      onSubmit={handleSubmit}
-      autoComplete="off"
-      className="sticky bottom-1 left-0 w-full max-w-2xl mx-auto bg-slate-200 dark:bg-slate-800 w-full h-45 rounded-2xl shadow-md border border-neutral-200 relative" 
+  return (
+    <div
+      ref={outputRef}
+      className="h-full w-full overflow-y-auto bg-slate-200 text-sm leading-6 text-slate-900 dark:bg-slate-800 dark:text-slate-300 sm:text-base sm:leading-7 flex flex-col"
     >
-      <div className="flex">
-        <textarea
-          className="grow m-4 outline outline-0 focus:outline-0 active:border-transparent min-h-16 resize-none"
-          placeholder="Type your question here ..."
-          maxLength={4000}
-          value={input}
-          onChange={e => setInput(e.target.value)}
-        />
+      <div className="flex-1  px-4 pt-4 space-y-2 py-10 ">
+        {messages.map((msg, i) => (
+          <ChatMessage key={i} role={msg.role} content={msg.content} />
+        ))}
       </div>
-      <div className="flex gap-2 items-center absolute right-2 bottom-2">
-        <div className="text-xs">{input.length}/{4000}</div>
-        <button
-          type="submit"
-          disabled={input.trim() === ""}
-          className="bg-neutral-700 rounded-full text-white w-8 h-8 p-2 flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="48" d="M112 244l144-144l144 144"></path>
-            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="48" d="M256 120v292"></path>
-          </svg>
-        </button>
-      </div>
-    </form>
-  </div>
-);
-
+      <form
+        onSubmit={handleSubmit}
+        autoComplete="off"
+        className="sticky bottom-1 left-0 w-full max-w-2xl mx-auto bg-slate-200 dark:bg-slate-800 w-full h-45 rounded-2xl shadow-md border border-neutral-200 relative"
+      >
+        <div className="flex">
+          <textarea
+            className="grow m-4 outline outline-0 focus:outline-0 active:border-transparent min-h-20 resize-none"
+            placeholder="Type your question here ..."
+            maxLength={maxLength}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2 items-center absolute right-2 bottom-2">
+          <div className="text-xs">
+            {input.length}/{maxLength}
+          </div>
+          <button
+            type="submit"
+            disabled={input.trim() === ""}
+            className="bg-neutral-700 rounded-full text-white w-8 h-8 p-2 flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
+          >
+            <MoveUp size={24} />
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 };
 
 export default ChatContainer;

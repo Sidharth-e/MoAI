@@ -11,7 +11,7 @@ const ChatList: React.FC = () => {
   const activeId = params?.id; // May be undefined if not on /chat/[id]
 
   return (
-    <div className="mx-2 mt-8 space-y-4">
+    <div className="mx-2 mt-8 space-y-5">
       {/* Search form */}
       <form>
         <label htmlFor="search-chats" className="sr-only">

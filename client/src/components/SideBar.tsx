@@ -18,18 +18,15 @@ import { usePathname } from "next/navigation";
 import ChatList from "./ChatList";
 import { signOut } from "next-auth/react";
 
-
-
 const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(true);
   const pathname = usePathname();
-const getLinkClasses = (path: string) =>
-  `rounded-lg p-1.5 transition-colors duration-200 ${
-    pathname === path
-      ? "bg-blue-100 text-blue-600 dark:bg-slate-800 dark:text-blue-600"
-      : "text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
-  }`;
-
+  const getLinkClasses = (path: string) =>
+    `rounded-lg p-1.5 transition-colors duration-200 ${
+      pathname === path
+        ? "bg-blue-100 text-blue-600 dark:bg-slate-800 dark:text-blue-600"
+        : "text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
+    }`;
 
   return (
     <aside className="flex">
@@ -49,61 +46,42 @@ const getLinkClasses = (path: string) =>
           {isOpen ? <FiChevronLeft size={24} /> : <FiMenu size={24} />}
         </button>
         {/* New conversation */}
-        <Link
-          href="/"
-         className={getLinkClasses("/discover")}
-        >
+        <Link href="/" className={getLinkClasses("/discover")}>
           <FiPlus size={24} />
         </Link>
-        <Link
-          href="/"
-          className={getLinkClasses("/")}
-        >
-          <FiHome size={24}/>
+        <Link href="/" className={getLinkClasses("/")}>
+          <FiHome size={24} />
         </Link>
 
         {/* Conversations */}
-        <Link
-          href="/chat"
-          className={getLinkClasses("/chat")}
-        >
+        <Link href="/chat" className={getLinkClasses("/chat")}>
           <FiMessageSquare size={24} />
         </Link>
 
         {/* Discover */}
-        <Link
-          href="#"
-         className={getLinkClasses("/discover")}
-        >
+        <Link href="#" className={getLinkClasses("/discover")}>
           <FiCompass size={24} />
         </Link>
 
         {/* User */}
-        <Link
-          href="#"
-         className={getLinkClasses("/discover")}
-        >
+        <Link href="#" className={getLinkClasses("/discover")}>
           <FiUser size={24} />
         </Link>
 
         {/* Settings */}
-        <Link
-          href="/settings"
-         className={getLinkClasses("/discover")}
-        >
+        <Link href="/settings" className={getLinkClasses("/discover")}>
           <FiSettings size={24} />
         </Link>
-                {/* Logout Button */}
+        {/* Logout Button */}
         <div className="mt-auto pt-4">
           <button
-        onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={() => signOut({ callbackUrl: "/" })}
             className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
             aria-label="Logout"
           >
             <FiLogOut size={24} />
           </button>
         </div>
-
       </div>
       {/* Second Column */}
       <div
@@ -120,7 +98,7 @@ const getLinkClasses = (path: string) =>
           </span>
         </div>
 
- <ChatList/>
+        <ChatList />
       </div>
     </aside>
   );
