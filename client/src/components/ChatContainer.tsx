@@ -181,8 +181,7 @@ return (
   className="h-full w-full overflow-y-auto bg-slate-200 text-sm leading-6 text-slate-900 dark:bg-slate-800 dark:text-slate-300 sm:text-base sm:leading-7 flex flex-col"
 >
 
-
-    <div className="flex-1  px-4 pt-4 space-y-2">
+    <div className="flex-1  px-4 pt-4 space-y-2 py-10 ">
       {messages.map((msg, i) => (
         <ChatMessage key={i} role={msg.role} content={msg.content} />
       ))}
