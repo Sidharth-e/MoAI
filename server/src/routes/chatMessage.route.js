@@ -5,9 +5,6 @@ const { ChatMessage, validate } = require("../models/chatMessage");
 router.post("/:threadId", async (req, res) => {
   try {
     const { error } = validate({ ...req.body, threadId: req.params.threadId });
-    console.log(error);
-    console.log(req.params.threadId);
-    
     if (error) return res.status(400).send({ message: error.details[0].message });
     const message = new ChatMessage({
       ...req.body,

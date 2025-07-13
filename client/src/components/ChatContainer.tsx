@@ -54,7 +54,7 @@ const ChatContainer: React.FC = () => {
           "Content-Type": "application/json",
           ...getAuthHeaders(jwtToken),
         },
-        body: JSON.stringify({ userMessage: prompt }),
+        body: JSON.stringify({ userMessage: prompt,threadId:id }),
       });
 
       if (!res.body) throw new Error("No response body");
@@ -173,62 +173,55 @@ const ChatContainer: React.FC = () => {
     scrollToBottom(outputRef);
   }, [messages]);
 
-  return (
-    <div className="flex flex-col h-full w-full bg-slate-200 p-4 text-sm leading-6 text-slate-900 dark:bg-slate-800 dark:text-slate-300 sm:text-base sm:leading-7">
-      <div ref={outputRef} className="flex-1 overflow-y-auto rounded-xl ">
-        {messages.map((msg, i) => (
-          <ChatMessage key={i} role={msg.role} content={msg.content} />
-        ))}
-      </div>
-      
-      <div className="mt-4 flex justify-center w-full">
-        <form
-          className="w-full max-w-xl bg-white/80 dark:bg-slate-800/70 shadow-xl rounded-2xl px-4 py-3 flex items-end gap-3 border border-slate-200 dark:border-slate-700 backdrop-blur-md"
-          onSubmit={handleSubmit}
-          autoComplete="off"
-        >
-          <label htmlFor="chat-input" className="sr-only">
-            Enter your prompt
-          </label>
-          <textarea
-            id="chat-input"
-            className="flex-1 min-h-[44px] max-h-32 rounded-xl border-none resize-y bg-slate-200 dark:bg-slate-700 p-4 text-base text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            placeholder="Enter your prompt…"
-            required
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            disabled={streaming}
-            rows={1}
-          />
-          <button
-            type="submit"
-            className="flex items-center gap-1 px-5 py-2 rounded-xl bg-gradient-to-br from-blue-600 via-emerald-500 to-purple-600 text-white font-semibold shadow hover:scale-105 hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-700 disabled:opacity-50 disabled:pointer-events-none"
-            disabled={streaming || input.trim() === ""}
-          >
-            <svg
-              className="h-5 w-5 text-white opacity-80"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M22 2L11 13"
-              ></path>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M22 2L15 22L11 13L2 9L22 2Z"
-              ></path>
-            </svg>
-            <span className="hidden sm:inline">Send</span>
-          </button>
-        </form>
-      </div>
+return (
+  <div className="h-full w-full bg-slate-200 text-sm leading-6 text-slate-900 dark:bg-slate-800 dark:text-slate-300 sm:text-base sm:leading-7 overflow-y-auto">
+    <div ref={outputRef} className="flex-1  px-4 pt-4 space-y-2">
+      {messages.map((msg, i) => (
+        <ChatMessage key={i} role={msg.role} content={msg.content} />
+      ))}
     </div>
-  );
+
+    <div className="sticky bottom-0 left-0 px-4 py-2">
+      <form
+        className="w-full max-w-xl mx-auto bg-white/80 dark:bg-slate-800/70 shadow-xl rounded-2xl px-4 py-3 flex items-end gap-3 border border-slate-200 dark:border-slate-700 backdrop-blur-md"
+        onSubmit={handleSubmit}
+        autoComplete="off"
+      >
+        <label htmlFor="chat-input" className="sr-only">
+          Enter your prompt
+        </label>
+        <textarea
+          id="chat-input"
+          className="flex-1 min-h-[44px] max-h-32 rounded-xl border-none resize-y bg-slate-200 dark:bg-slate-700 p-4 text-base text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+          placeholder="Enter your prompt…"
+          required
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          disabled={streaming}
+          rows={1}
+        />
+        <button
+          type="submit"
+          className="flex items-center gap-1 px-5 py-2 rounded-xl bg-gradient-to-br from-blue-600 via-emerald-500 to-purple-600 text-white font-semibold shadow hover:scale-105 hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+          disabled={streaming || input.trim() === ""}
+        >
+          <svg
+            className="h-5 w-5 text-white opacity-80"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M22 2L11 13" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M22 2L15 22L11 13L2 9L22 2Z" />
+          </svg>
+          <span className="hidden sm:inline">Send</span>
+        </button>
+      </form>
+    </div>
+  </div>
+);
+
 };
 
 export default ChatContainer;
