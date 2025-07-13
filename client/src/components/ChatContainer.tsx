@@ -180,6 +180,7 @@ const ChatContainer: React.FC = () => {
           <ChatMessage key={i} role={msg.role} content={msg.content} />
         ))}
       </div>
+      
       <div className="mt-4 flex justify-center w-full">
         <form
           className="w-full max-w-xl bg-white/80 dark:bg-slate-800/70 shadow-xl rounded-2xl px-4 py-3 flex items-end gap-3 border border-slate-200 dark:border-slate-700 backdrop-blur-md"
