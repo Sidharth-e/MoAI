@@ -189,7 +189,7 @@ return (
  <form
       onSubmit={handleSubmit}
       autoComplete="off"
-      className="sticky bottom-1 left-0 w-full max-w-xl mx-auto bg-slate-200 dark:bg-slate-800 w-full h-28 rounded-2xl shadow-md border border-neutral-200 relative" 
+      className="sticky bottom-1 left-0 w-full max-w-2xl mx-auto bg-slate-200 dark:bg-slate-800 w-full h-45 rounded-2xl shadow-md border border-neutral-200 relative" 
     >
       <div className="flex">
         <textarea
