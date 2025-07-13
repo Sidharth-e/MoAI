@@ -18,7 +18,7 @@ router.post("/", async (req, res) => {
     const messages = [
         {
             role: "system",
-            content: "You are a helpful assistant tasked with user query response."
+            content: "You are a helpful assistant tasked with user query response.Alway give response in markdown but not fully markdown"
         },
         {
             role: "user",

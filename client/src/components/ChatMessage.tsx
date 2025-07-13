@@ -1,5 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from 'rehype-raw'
 import MarkdownCodeBlock from "./MarkdownCodeBlock";
 
 type ChatMessageProps = {
@@ -23,8 +25,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ role, content }) => (
       src={avatarUrl[role]}
       alt={role}
     />
-    <div className="prose-stone max-w-none">
+   <div className="prose prose-slate dark:prose-invert max-w-none transition-all duration-500">
+
       <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
         components={{
           code: MarkdownCodeBlock,
         }}

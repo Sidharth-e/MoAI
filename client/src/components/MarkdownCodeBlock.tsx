@@ -55,7 +55,7 @@ const MarkdownCodeBlock: React.FC<MarkdownCodeBlockProps> = memo(
 
     // Render the rich code block UI
     return (
-      <div className="relative my-4 overflow-hidden rounded-t-md">
+      <div className="relative my-4 overflow-hidden rounded-t-md min-screen-full">
         <div className="flex justify-between items-center px-4 py-2 text-xs font-mono bg-[#282C34] text-white">
           <span>{language}</span>
           <div className="flex space-x-1">
