@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect, FormEvent } from "react";
 import ChatMessage from "./ChatMessage";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Send } from "lucide-react";
+
 
 // ---- Types ---- //
 type Message = {
@@ -174,51 +176,45 @@ const ChatContainer: React.FC = () => {
   }, [messages]);
 
 return (
-  <div className="h-full w-full bg-slate-200 text-sm leading-6 text-slate-900 dark:bg-slate-800 dark:text-slate-300 sm:text-base sm:leading-7 overflow-y-auto">
-    <div ref={outputRef} className="flex-1  px-4 pt-4 space-y-2">
+<div
+  ref={outputRef}
+  className="h-full w-full overflow-y-auto bg-slate-200 text-sm leading-6 text-slate-900 dark:bg-slate-800 dark:text-slate-300 sm:text-base sm:leading-7 flex flex-col"
+>
+
+
+    <div className="flex-1  px-4 pt-4 space-y-2">
       {messages.map((msg, i) => (
         <ChatMessage key={i} role={msg.role} content={msg.content} />
       ))}
     </div>
-
-    <div className="sticky bottom-0 left-0 px-4 py-2">
-      <form
-        className="w-full max-w-xl mx-auto bg-white/80 dark:bg-slate-800/70 shadow-xl rounded-2xl px-4 py-3 flex items-end gap-3 border border-slate-200 dark:border-slate-700 backdrop-blur-md"
-        onSubmit={handleSubmit}
-        autoComplete="off"
-      >
-        <label htmlFor="chat-input" className="sr-only">
-          Enter your prompt
-        </label>
+ <form
+      onSubmit={handleSubmit}
+      autoComplete="off"
+      className="sticky bottom-1 left-0 w-full max-w-xl mx-auto bg-slate-200 dark:bg-slate-800 w-full h-28 rounded-2xl shadow-md border border-neutral-200 relative" 
+    >
+      <div className="flex">
         <textarea
-          id="chat-input"
-          className="flex-1 min-h-[44px] max-h-32 rounded-xl border-none resize-y bg-slate-200 dark:bg-slate-700 p-4 text-base text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          placeholder="Enter your prompt…"
-          required
+          className="grow m-4 outline outline-0 focus:outline-0 active:border-transparent min-h-16 resize-none"
+          placeholder="Type your question here ..."
+          maxLength={4000}
           value={input}
           onChange={e => setInput(e.target.value)}
-          disabled={streaming}
-          rows={1}
         />
+      </div>
+      <div className="flex gap-2 items-center absolute right-2 bottom-2">
+        <div className="text-xs">{input.length}/{4000}</div>
         <button
           type="submit"
-          className="flex items-center gap-1 px-5 py-2 rounded-xl bg-gradient-to-br from-blue-600 via-emerald-500 to-purple-600 text-white font-semibold shadow hover:scale-105 hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-700 disabled:opacity-50 disabled:pointer-events-none"
-          disabled={streaming || input.trim() === ""}
+          disabled={input.trim() === ""}
+          className="bg-neutral-700 rounded-full text-white w-8 h-8 p-2 flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
         >
-          <svg
-            className="h-5 w-5 text-white opacity-80"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M22 2L11 13" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M22 2L15 22L11 13L2 9L22 2Z" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="48" d="M112 244l144-144l144 144"></path>
+            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="48" d="M256 120v292"></path>
           </svg>
-          <span className="hidden sm:inline">Send</span>
         </button>
-      </form>
-    </div>
+      </div>
+    </form>
   </div>
 );
 
