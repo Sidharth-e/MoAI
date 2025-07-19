@@ -4,8 +4,8 @@ import cors from "cors";
 import authenticateMiddleware from "./middleware/authenticateMiddleware";
 import connection from "./db";
 
-import userRoutes from "./routes/user";
-import huggingFaceRoute from "./routes/huggingFace";
+import userRoutes from "./routes/user.route";
+import huggingFaceRoute from "./routes/huggingFace.route";
 import chatRoute from "./routes/chat.route";
 import chatThreadRoutes from "./routes/chatThread.route";
 import chatMessageRoutes from "./routes/chatMessage.route";

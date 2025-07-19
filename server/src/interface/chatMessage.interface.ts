@@ -4,7 +4,7 @@ import  { Document,Types } from "mongoose";
 // Define an interface for the ChatMessage document
 export interface IChatMessage extends Document {
   threadId: Types.ObjectId;
-  sender: "user" | "assistant";
+  sender: "user" | "assistant" |"tool";
   text: string;
   createdAt: Date;
 }
