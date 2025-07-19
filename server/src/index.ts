@@ -1,34 +1,42 @@
-require("dotenv").config();
-const express = require("express");
-const app = express();
-const cors = require("cors");
-const verifyToken= require( "./middleware/auth");
-const connection = require("./db");
+import dotenv from "dotenv";
+import express, { Application } from "express";
+import cors from "cors";
+import authenticateMiddleware from "./middleware/authenticateMiddleware";
+import connection from "./db";
 
-const userRoutes = require("./routes/user");
-const huggingFaceRoute = require("./routes/huggingFace");
-const chatRoute = require("./routes/chat.route");
-const chatThreadRoutes = require("./routes/chatThread.route");
-const chatMessageRoutes = require("./routes/chatMessage.route");
-const emailValidationRoutes = require("./routes/common/email");
+import userRoutes from "./routes/user";
+import huggingFaceRoute from "./routes/huggingFace";
+import chatRoute from "./routes/chat.route";
+import chatThreadRoutes from "./routes/chatThread.route";
+import chatMessageRoutes from "./routes/chatMessage.route";
 
-
+dotenv.config();
+// Ensure connection is initiated correctly with appropriate types
+function connectToDatabase() {
+  try {
+    connection();
+    console.log("Database connected successfully");
+  } catch (error) {
+    console.error("Error connecting to the database: ", error);
+  }
+}
 
 // database connection
-connection();
+connectToDatabase();
+
+// Initialize the express app
+const app: Application = express();
 
 // middlewares
 app.use(express.json());
 app.use(cors());
 
-// routes
-app.use("/api/user",verifyToken, userRoutes);
-app.use("/huggingFace/redye",verifyToken,  huggingFaceRoute);
-app.use("/api/chat",chatRoute);
-app.use("/api/chat-threads", verifyToken, chatThreadRoutes);       // For chat threads (list, create)
-app.use("/api/chat-messages", verifyToken, chatMessageRoutes);     // For chat messages (post, get by thread)
-app.use("/api/email",verifyToken,  emailValidationRoutes);  
-
+// routes with type verification
+app.use("/api/user", authenticateMiddleware, userRoutes);
+app.use("/huggingFace/redye", authenticateMiddleware, huggingFaceRoute);
+app.use("/api/chat", chatRoute);
+app.use("/api/chat-threads", authenticateMiddleware, chatThreadRoutes); // For chat threads (list, create)
+app.use("/api/chat-messages", authenticateMiddleware, chatMessageRoutes); // For chat messages (post, get by thread)
 
 const port = process.env.PORT || 8080;
-app.listen(port, console.log(`Listening on port ${port}...`));
+app.listen(port, () => console.log(`Listening on port ${port}...`));
