@@ -133,6 +133,7 @@ const ChatContainer: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
+    if (!id || status !== "authenticated") return;
     const maybeUpdateTitle = async () => {
       if (
         !titleUpdatedRef.current &&
