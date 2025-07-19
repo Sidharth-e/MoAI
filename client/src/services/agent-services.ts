@@ -81,4 +81,21 @@ export async function updateAgentConnections(jwtToken: string, agentId: string, 
     body: JSON.stringify({ connections }),
   });
   return handleJson<AgentDTO>(res);
+}
+
+export async function updateAgent(jwtToken: string, agentId: string, agent: Partial<Omit<AgentDTO, '_id'>>): Promise<AgentDTO> {
+  const res = await fetch(`${API_BASE}/agents/${agentId}`, {
+    method: 'PUT',
+    headers: buildHeaders(jwtToken),
+    body: JSON.stringify(agent),
+  });
+  return handleJson<AgentDTO>(res);
+}
+
+export async function deleteAgent(jwtToken: string, agentId: string): Promise<{ message: string }> {
+  const res = await fetch(`${API_BASE}/agents/${agentId}`, {
+    method: 'DELETE',
+    headers: buildHeaders(jwtToken),
+  });
+  return handleJson<{ message: string }>(res);
 } 
