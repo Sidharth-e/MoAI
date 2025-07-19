@@ -61,4 +61,6 @@ body::-webkit-scrollbar-button,
   height: 0;
   width: 0;
 }
-
+.prose > pre {
+  background-color: transparent !important; /* Affects only direct children within prose */
+}

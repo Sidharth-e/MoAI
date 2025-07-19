@@ -19,15 +19,7 @@ router.post("/", async (req, res) => {
     }
 
     const prompt = `
-You are a helpful assistant tasked with redesigning the provided HTML page using a modern, elegant, and premium design. You can use inline CSS, Bootstrap, TailwindCSS, or a combination, depending on what is present in the input.
-
-Instructions:
-- Always return the **full HTML code**, not code snippets or explanations.
-- If the input HTML uses inline styles, continue using inline CSS.
-- If the input HTML uses class names only without external CSS, apply the styles using inline CSS or utility classes (Bootstrap or TailwindCSS).
-- If specific external or internal CSS is present, continue using that style method.
-- Do not include explanations, only return the full HTML code as output.
-
+You are a helpful assistant 
 **HTML Code**
 ${html}
 `;

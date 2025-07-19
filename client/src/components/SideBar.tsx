@@ -42,7 +42,7 @@ const Sidebar: React.FC = () => {
     match ? match(pathname) : pathname === href;
 
   const baseButton =
-    "group relative flex items-center justify-center rounded-lg p-1.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+    "group relative flex items-center p-4 justify-center rounded-lg transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
   const active = "bg-blue-100 text-blue-600 dark:bg-slate-800 dark:text-blue-500";
   const inactive = "text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800";
 
@@ -122,12 +122,12 @@ const Sidebar: React.FC = () => {
       {/* Chat List Panel */}
       <div
         className={`h-full overflow-y-auto bg-slate-50 dark:bg-slate-900 transition-all duration-300 ${
-          isOpen ? "w-56 sm:w-64 px-4 py-6 opacity-100" : "w-0 px-0 py-0 opacity-0 pointer-events-none"
+          isOpen ? "w-66 sm:w-74 px-0 py-6 opacity-100" : "w-0 px-0 py-0 opacity-0 pointer-events-none"
         }`}
       >
         {isOpen && (
           <div className="flex flex-col h-full">
-            <header className="mb-4 flex items-center gap-2">
+            <header className="mb-1 mx-2 flex items-center gap-2">
               <h2 className="text-lg font-medium text-slate-800 dark:text-slate-200">
                 Chats
               </h2>
