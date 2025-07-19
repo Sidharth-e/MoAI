@@ -40,11 +40,11 @@ const ChatContainer: React.FC = () => {
   const outputRef = useRef<HTMLDivElement>(null);
   const titleUpdatedRef = useRef(false);
   const maxLength = 10000;
+  let assistantMessage = "";
 
   const fetchAndStreamResponse = async (prompt: string) => {
     setStreaming(true);
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
-    let assistantMessage = "";
     try {
       assistantMessage = await streamAssistantResponse({
         prompt,
@@ -139,7 +139,7 @@ const ChatContainer: React.FC = () => {
         !titleUpdatedRef.current &&
         messages.length >= 2 &&
         messages[0].role === "user" &&
-        messages[1].role === "assistant"
+        messages[1].role === "assistant"&& !streaming
       ) {
         titleUpdatedRef.current = true;
         try {
@@ -151,7 +151,7 @@ const ChatContainer: React.FC = () => {
       }
     };
     maybeUpdateTitle();
-  }, [messages, id, jwtToken, refreshThreads]);
+  }, [messages, id, jwtToken, refreshThreads,streaming]);
 
   return (
     <div
