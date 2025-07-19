@@ -2,10 +2,17 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { ChatMessage } from "../models/chatMessage";
 import { createAzureOpenAIClient } from "../services/aoai";
+import { parseResume } from "../tools/parseResume";
+import { parseJD } from "../tools/parseJD";
+import { matchResumeToJd } from "../tools/matchResumeToJd";
+import { summarizeGap } from "../tools/summarizeGap";
+import { getWeather } from "../tools/getWeather";
 
+// Load environment variables
 dotenv.config();
-const router = express.Router();
 
+const router = express.Router();
+// POST /chat - Handle user messages and stream responses
 router.post("/", async (req: Request, res: Response) => {
   const { userMessage, threadId }: { userMessage: string; threadId: string } =
     req.body;
@@ -46,15 +53,83 @@ router.post("/", async (req: Request, res: Response) => {
       { role: "user" as const, content: userMessage },
     ];
 
-    const { client, deployment } = createAzureOpenAIClient();
+    // Define MCP tools for function calling (OpenAI format)
+    const mcpTools = [
+      {
+        type: "function",
+        function: {
+          name: parseResume.name,
+          description: "Parse a resume and extract structured information (name, education, skills, work experience)",
+          parameters: {
+            type: "object",
+            properties: {
+              resume: { type: "string", description: "The resume text to parse." },
+            },
+            required: ["resume"],
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
+          name: parseJD.name,
+          description: "Parse a job description and extract structured information (title, responsibilities, skills)",
+          parameters: {
+            type: "object",
+            properties: {
+              jd: { type: "string", description: "The job description text to parse." },
+            },
+            required: ["jd"],
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
+          name: matchResumeToJd.name,
+          description: "Compare a resume and job description, listing matched and missing skills, and a match score.",
+          parameters: {
+            type: "object",
+            properties: {
+              resume: { type: "string", description: "The resume text." },
+              jd: { type: "string", description: "The job description text." },
+            },
+            required: ["resume", "jd"],
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
+          name: summarizeGap.name,
+          description: "Generate a professional gap analysis summary comparing a resume and job description.",
+          parameters: {
+            type: "object",
+            properties: {
+              resume: { type: "string", description: "The resume text." },
+              jd: { type: "string", description: "The job description text." },
+            },
+            required: ["resume", "jd"],
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
+          name: getWeather.name,
+          description: "Get the current (dummy) weather for a city.",
+          parameters: {
+            type: "object",
+            properties: {
+              city: { type: "string", description: "The city to get weather for." },
+            },
+            required: ["city"],
+          },
+        },
+      },
+    ] as const;
 
-    // Initiate streaming
-    const stream = await client.chat.completions.create({
-      model: deployment, // Azure deployment name
-      messages,
-      temperature: 0.7,
-      stream: true,
-    });
+    const { client, deployment } = createAzureOpenAIClient();
 
     // Set up SSE headers
     res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
@@ -62,24 +137,114 @@ router.post("/", async (req: Request, res: Response) => {
     res.setHeader("Connection", "keep-alive");
     res.flushHeaders?.(); // if using compression, ensure immediate flush
 
-    try {
+    // Tool handler map
+    const toolHandlers: Record<string, Function> = {
+      [parseResume.name]: parseResume.handler,
+      [parseJD.name]: parseJD.handler,
+      [matchResumeToJd.name]: matchResumeToJd.handler,
+      [summarizeGap.name]: summarizeGap.handler,
+      [getWeather.name]: getWeather.handler,
+    };
+
+    // Helper to stream data to client
+    function sendData(data: any) {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    }
+
+    // Conversation state
+    type ChatMessageParam =
+      | { role: "user" | "assistant" | "system"; content: string }
+      | { role: "tool"; content: string; tool_call_id: string };
+    let currentMessages: ChatMessageParam[] = [...messages];
+    let toolLoop = true;
+    let lastResponse = null;
+
+    while (toolLoop) {
+      // Start streaming from OpenAI
+      const stream = await client.chat.completions.create({
+        model: deployment,
+        messages: currentMessages,
+        temperature: 0.7,
+        stream: true,
+        tools: [...mcpTools],
+      });
+
+      let toolCalls: any[] = [];
+      let assistantMessage: any = { role: "assistant", content: "" };
+      let toolCallDetected = false;
+
       for await (const chunk of stream) {
         if (chunk.choices?.length) {
-          // Send the raw chunk so client can keep its existing parsing logic
-          res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+          const choice = chunk.choices[0];
+          // If tool_calls is present, collect tool calls
+          if (choice.delta?.tool_calls) {
+            toolCallDetected = true;
+            for (const tc of choice.delta.tool_calls) {
+              // Accumulate tool calls (arguments may be streamed in pieces)
+              let existing = toolCalls.find((t) => t.index === tc.index);
+              if (!existing) {
+                toolCalls.push({ ...tc, arguments: tc.function?.arguments || "" });
+              } else {
+                // Append streamed arguments
+                existing.function = existing.function || {};
+                existing.function.arguments = (existing.function.arguments || "") + (tc.function?.arguments || "");
+              }
+            }
+          }
+          // If content is present, stream to client
+          if (choice.delta?.content) {
+            assistantMessage.content += choice.delta.content;
+            sendData(chunk);
+          }
         }
       }
-      // Signal completion
-      res.write(`data: [DONE]\n\n`);
-      res.end();
-    } catch (streamErr) {
-      console.error("Streaming error:", streamErr);
-      if (!res.headersSent) {
-        res.status(500).json({ error: "Streaming failed" });
+
+      if (toolCallDetected && toolCalls.length > 0) {
+        // Execute each tool call and build tool message(s)
+        const toolMessages = [];
+        for (const tc of toolCalls) {
+          const toolName = tc.function?.name;
+          const argsStr = tc.function?.arguments;
+          let args = {};
+          try {
+            args = JSON.parse(argsStr);
+          } catch (e) {
+            args = {};
+          }
+          const handler = toolHandlers[toolName];
+          let toolResult = "";
+          if (handler) {
+            try {
+              const result = await handler(args);
+              toolResult = typeof result === "string" ? result : JSON.stringify(result);
+            } catch (e) {
+              toolResult = `Error: ${e}`;
+            }
+          } else {
+            toolResult = `No handler for tool: ${toolName}`;
+          }
+          const toolMsg: ChatMessageParam = {
+            role: "tool",
+            tool_call_id: String(tc.id),
+            content: toolResult,
+          };
+          toolMessages.push(toolMsg);
+        }
+        // Add tool messages to conversation and continue loop
+        currentMessages.push({ ...assistantMessage, content: undefined, tool_calls: toolCalls });
+        currentMessages.push(...toolMessages);
       } else {
-        res.end();
+        // No tool call, finish streaming
+        if (assistantMessage.content) {
+          // Send final chunk if not already sent
+          sendData({ choices: [{ delta: { content: "" } }] });
+        }
+        break;
       }
     }
+    // Signal completion
+    res.write(`data: [DONE]\n\n`);
+    res.end();
   } catch (error) {
     console.error("Error querying Azure OpenAI:", error);
     if (!res.headersSent) {

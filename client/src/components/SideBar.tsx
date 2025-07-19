@@ -13,6 +13,7 @@ import {
   FiCompass,
   FiPlus,
   FiHome,
+  FiUsers,
 } from "react-icons/fi";
 import { signOut, useSession } from "next-auth/react";
 import ChatList from "./ChatList";
@@ -36,6 +37,7 @@ const Sidebar: React.FC = () => {
     { href: "/discover", icon: <FiCompass size={22} />, label: "Discover" },
     { href: "/profile", icon: <FiUser size={22} />, label: "Profile" },
     { href: "/settings", icon: <FiSettings size={22} />, label: "Settings" },
+    { href: "/agents", icon: <FiUsers size={22} />, label: "Agents" },
   ];
 
   const isActive = (href: string, match?: (p: string) => boolean) =>

@@ -27,7 +27,6 @@ export const parseResume = {
     });
 
     const parsedOutput = chatResponse.choices[0].message.content;
-
     return {
       content: [
         {

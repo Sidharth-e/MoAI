@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MoAI Client (Web App)
 
-## Getting Started
+This is the frontend for the MoAI project, built with Next.js, React, and TypeScript. It provides a modern, authenticated chat interface, settings, and integration with backend AI services.
 
-First, run the development server:
+## Features
+- Secure authentication (NextAuth.js, JWT)
+- Chat interface with threads and message history
+- Markdown and code block rendering
+- Search and create chat threads
+- User settings page
+- Responsive sidebar navigation
+- Integration with backend AI APIs
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Folder Structure
+```
+client/
+  src/
+    app/
+      (authenticated)/      # Protected routes (chat, settings, etc.)
+      layout.tsx            # Root layout
+      page.tsx              # Landing page
+      globals.css           # Global styles
+    components/             # UI components (Chat, Sidebar, etc.)
+    contexts/               # React context providers
+    features/               # Feature modules (auth, navigation, etc.)
+    lib/                    # Utility libraries (JWT, MongoDB, etc.)
+    services/               # API service functions
+    types/                  # TypeScript types and declarations
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup & Installation
+1. **Install dependencies:**
+   ```bash
+   cd client
+   npm install
+   ```
+2. **Configure environment variables:**
+   If required, create a `.env.local` file for NextAuth or API URLs (see backend docs for details).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Running the Client
+- **Development:**
+  ```bash
+  npm run dev
+  ```
+- **Production:**
+  ```bash
+  npm run build
+  npm start
+  ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
+- `npm run dev` — Start development server (with Turbopack)
+- `npm run build` — Build for production
+- `npm start` — Start production server
+- `npm run lint` — Lint codebase
 
-## Learn More
+## Main Routes
+| Path                        | Description                       |
+|-----------------------------|-----------------------------------|
+| `/`                         | Landing page                      |
+| `/chat`                     | Chat interface (authenticated)    |
+| `/chat/[id]`                | Individual chat thread            |
+| `/settings`                 | User settings (authenticated)     |
+| `/unauthorized`             | Unauthorized access page          |
 
-To learn more about Next.js, take a look at the following resources:
+## Key Components
+- `ChatContainer`, `ChatList`, `ChatMessage` — Chat UI
+- `SideBar` — Navigation sidebar
+- `NewChat`, `SearchChat` — Chat thread actions
+- `Settings` — User settings UI
+- `MarkdownCodeBlock` — Markdown/code rendering
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech Stack
+- Next.js 15, React 19, TypeScript
+- NextAuth.js for authentication
+- Tailwind CSS for styling
+- MongoDB (via backend)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
+Specify your license here.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*For more details, see the source code in each folder.*
