@@ -1,29 +1,26 @@
 import express, { Request, Response } from "express";
-import axios, { AxiosResponse } from "axios";
-import { ChatMessage } from "../models/chatMessage";
 import dotenv from "dotenv";
-dotenv.config();
-// Load environment variables
-const AZURE_OPENAI_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT as string;
-const AZURE_OPENAI_API_KEY = process.env.AZURE_OPENAI_API_KEY as string;
-const AZURE_OPENAI_DEPLOYMENT = process.env.AZURE_OPENAI_DEPLOYMENT as string;
+import { ChatMessage } from "../models/chatMessage";
+import { createAzureOpenAIClient } from "../services/aoai";
 
+dotenv.config();
 const router = express.Router();
 
-// POST /chat
 router.post("/", async (req: Request, res: Response) => {
-  const { userMessage, threadId }: { userMessage: string; threadId: string } = req.body;
+  const { userMessage, threadId }: { userMessage: string; threadId: string } =
+    req.body;
 
   if (!userMessage || typeof userMessage !== "string") {
     return res.status(400).json({ error: "Missing or invalid userMessage" });
   }
 
   try {
-    // Fetch prior messages in order
-    const history = await ChatMessage.find({ threadId }).sort({ createdAt: -1 }).limit(10);
-    history.reverse();
+    // Fetch up to last 10 in chronological order directly
+    const history = await ChatMessage.find({ threadId })
+      .sort({ createdAt: 1 })
+      .limit(10);
 
-    // If last message in history is the same as userMessage, remove it
+    // If the *last* stored user message equals the incoming one (duplicate resend), ignore it
     if (
       history.length > 0 &&
       history[history.length - 1].sender === "user" &&
@@ -32,56 +29,64 @@ router.post("/", async (req: Request, res: Response) => {
       history.pop();
     }
 
-    // Transform history into OpenAI chat format
     const chatHistory = history.map((msg) => ({
-      role: msg.sender,
+      role: msg.sender as "user" | "assistant" | "system",
       content: msg.text,
     }));
 
-    // Compose complete messages array
+    const systemMessage = {
+      role: "system" as const,
+      content:
+        "You are a helpful assistant tasked with user query response. Always respond in markdown (no full-document boilerplate).",
+    };
+
     const messages = [
-      {
-        role: "system",
-        content: "You are a helpful assistant tasked with user query response. Always give response in markdown but not fully markdown",
-      },
+      systemMessage,
       ...chatHistory,
-      {
-        role: "user",
-        content: userMessage,
-      },
+      { role: "user" as const, content: userMessage },
     ];
 
-    const url = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-03-01-preview`;
+    const { client, deployment } = createAzureOpenAIClient();
 
-
-    const azureRes: AxiosResponse<any> = await axios({
-      method: "post",
-      url,
-      data: {
-        messages,
-        temperature: 0.7,
-        stream: true,
-      },
-      headers: {
-        "Content-Type": "application/json",
-        "api-key": AZURE_OPENAI_API_KEY,
-      },
-      responseType: "stream",
+    // Initiate streaming
+    const stream = await client.chat.completions.create({
+      model: deployment, // Azure deployment name
+      messages,
+      temperature: 0.7,
+      stream: true,
     });
 
-    res.setHeader("Content-Type", "text/event-stream");
-    azureRes.data.pipe(res);
+    // Set up SSE headers
+    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders?.(); // if using compression, ensure immediate flush
 
-    azureRes.data.on("end", () => res.end());
-    azureRes.data.on("error", (err: Error) => {
-      console.error("Azure stream error:", err);
+    try {
+      for await (const chunk of stream) {
+        if (chunk.choices?.length) {
+          // Send the raw chunk so client can keep its existing parsing logic
+          res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+        }
+      }
+      // Signal completion
+      res.write(`data: [DONE]\n\n`);
       res.end();
-    });
-
+    } catch (streamErr) {
+      console.error("Streaming error:", streamErr);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Streaming failed" });
+      } else {
+        res.end();
+      }
+    }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error querying Azure OpenAI:", errorMessage);
-    res.status(500).json({ error: "Model inference failed" });
+    console.error("Error querying Azure OpenAI:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Model inference failed" });
+    } else {
+      res.end();
+    }
   }
 });
 

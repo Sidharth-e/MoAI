@@ -1,5 +1,5 @@
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { OpenAIInstance } from "../services/openAI.js";
+import {createAzureOpenAIClient } from "../services/aoai";
 import { z } from "zod";
 
 // Use backticks for string interpolation
@@ -28,12 +28,12 @@ export const summarizeGap = {
     resume: string;
     jd: string;
   }): Promise<CallToolResult> => {
-    const openai = OpenAIInstance();
+    const {client,deployment} = createAzureOpenAIClient();
 
     const systemContent = generateSystemMessage(resume, jd);
 
-    const chatResponse = await openai.chat.completions.create({
-      model: "gpt-4.1",
+    const chatResponse = await client.chat.completions.create({
+      model: deployment,
       messages: [
         { role: "system", content: systemContent },
         {

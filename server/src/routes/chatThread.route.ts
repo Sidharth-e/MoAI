@@ -1,7 +1,7 @@
 import express, {Response } from "express";
 import { ChatThread, validate as validateThread } from "../models/chatThread";
 import { ChatMessage } from "../models/chatMessage";
-import { AzureOpenAIInstance } from "../services/aoai";
+import { createAzureOpenAIClient } from "../services/aoai";
 import { AuthenticatedRequest } from "../interface/authenticateMiddleware.interface";
 
 
@@ -113,7 +113,7 @@ router.patch("/:id", async (req: AuthenticatedRequest, res: Response) => {
       return res.status(403).send({ message: "User not authenticated" });
     }
 
-    const client = AzureOpenAIInstance();
+    const {client,deployment} = createAzureOpenAIClient();
 
     const history = await ChatMessage.find({ threadId }).sort({ createdAt: 1 }).limit(2);
 
@@ -139,7 +139,7 @@ const messages: any = [
   },
 ];
     const response = await client.chat.completions.create({
-      model: "gpt-4.1",
+      model: deployment,
       messages,
       temperature: 1,
     });

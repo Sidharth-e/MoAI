@@ -151,7 +151,7 @@ export async function streamAssistantResponse(
           const line = raw.trim();
             if (!line.startsWith("data:")) continue;
           const data = line.slice("data:".length).trim();
-          if (data === "[DONE]") continue;
+          if (data === "[DONE]") break; 
           try {
             const json = JSON.parse(data);
             const delta: string | undefined =

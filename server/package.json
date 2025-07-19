@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@huggingface/inference": "^4.4.0",
+    "@modelcontextprotocol/sdk": "^1.16.0",
     "axios": "^1.6.0",
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",

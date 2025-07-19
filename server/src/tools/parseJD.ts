@@ -1,5 +1,5 @@
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { OpenAIInstance } from '../services/openAI.js';
+import { createAzureOpenAIClient } from '../services/aoai';
 import { z } from 'zod';
 
 const systemMessage = `
@@ -17,10 +17,10 @@ export const parseJD = {
     jd: z.string(),
   },
   handler: async ({ jd }: { jd: string }): Promise<CallToolResult> => {
-    const openai = OpenAIInstance();
+     const {client,deployment} = createAzureOpenAIClient();
 
-    const chatResponse = await openai.chat.completions.create({
-      model: 'gpt-4.1',
+    const chatResponse = await client.chat.completions.create({
+      model: deployment,
       messages: [
         { role: 'system', content: systemMessage },
         { role: 'user', content: jd },
