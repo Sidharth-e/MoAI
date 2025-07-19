@@ -36,6 +36,8 @@ const ERROR_HISTORY_MSG = "[Error loading history]";
 // ---- Main Component ---- //
 const ChatContainer: React.FC = () => {
   const { data: session } = useSession();
+  const titleUpdatedRef = useRef(false);
+
   const { id } = useParams();
   const jwtToken = session?.user.jwtToken;
   const [messages, setMessages] = useState<Message[]>([]);
@@ -125,6 +127,9 @@ const ChatContainer: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    setInput("");
+    setMessages((msgs) => [...msgs, { role: "user", content: input }]);
     if (!input.trim() || streaming) return;
     // Persist user message
     await fetch(`${API_BASE}/chat-messages/${id}`, {
@@ -138,9 +143,7 @@ const ChatContainer: React.FC = () => {
         sender: "user",
       }),
     });
-    setMessages((msgs) => [...msgs, { role: "user", content: input }]);
     await fetchAndStreamResponse(input);
-    setInput("");
   };
 
   // Fetch chat history on load
@@ -177,6 +180,27 @@ const ChatContainer: React.FC = () => {
   useEffect(() => {
     scrollToBottom(outputRef);
   }, [messages]);
+
+
+  useEffect(() => {
+  if (
+    !titleUpdatedRef.current &&
+    messages.length >= 2 &&
+    messages[0].role === "user" &&
+    messages[1].role === "assistant"
+  ) {
+    titleUpdatedRef.current = true; // Prevent future runs
+    console.log("✅ Updating title...");
+
+    fetch(`${API_BASE}/chat-threads/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(jwtToken),
+      },
+    }).catch((err) => console.error("Failed to update title:", err));
+  }
+}, [messages, id, jwtToken]);
 
   return (
     <div

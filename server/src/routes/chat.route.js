@@ -15,7 +15,6 @@ router.post("/", async (req, res) => {
   if (!userMessage || typeof userMessage !== "string") {
     return res.status(400).json({ error: "Missing or invalid userMessage" });
   }
-
   // Fetch prior messages in order
 // Fetch prior messages in order
 const history = await ChatMessage.find({ threadId })
