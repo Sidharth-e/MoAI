@@ -8,6 +8,7 @@ import { Copy, Check, ThumbsDown, ThumbsUp } from "lucide-react"; // <-- import 
 type ChatMessageProps = {
   role: "user" | "assistant";
   content: string;
+  agentName?: string;
 };
 
 const avatarUrl = {
@@ -15,7 +16,7 @@ const avatarUrl = {
   assistant: "https://dummyimage.com/256x256/354ea1/ffffff&text=G",
 };
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ role, content }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, agentName }) => {
   const isAssistant = role === "assistant";
   const [copied, setCopied] = useState(false); // <-- state for copied
 
@@ -33,6 +34,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ role, content }) => {
     >
       <img className="h-8 w-8 rounded-full" src={avatarUrl[role]} alt={role} />
       <div className="flex w-full flex-col gap-2">
+        {/* Show agent name if present and assistant */}
+        {isAssistant && agentName && (
+          <div className="text-xs text-blue-600 dark:text-blue-300 font-semibold mb-1">{agentName}</div>
+        )}
         <div className="prose prose-slate dark:prose-invert max-w-none transition-all duration-500">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}

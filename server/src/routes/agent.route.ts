@@ -61,12 +61,15 @@ router.delete('/:id', async (req, res) => {
 // Send a message to an agent (Azure OpenAI)
 router.post('/:id/message', async (req, res) => {
   try {
-    const agent = await Agent.findById(req.params.id);
+    const agent = await Agent.findById(req.params.id).populate('connections');
     if (!agent) return res.status(404).json({ error: 'Agent not found' });
     const { message } = req.body;
     if (!message) return res.status(400).json({ error: 'Message is required' });
 
     const { client, deployment } = createAzureOpenAIClient();
+    const conversation = [];
+
+    // Main agent responds to user
     const systemPrompt = agent.config?.systemPrompt || `You are agent ${agent.name}, a helpful assistant.`;
     const chatResponse = await client.chat.completions.create({
       model: deployment,
@@ -76,8 +79,38 @@ router.post('/:id/message', async (req, res) => {
       ],
       temperature: 0.7,
     });
-    const response = chatResponse.choices?.[0]?.message?.content?.trim() || '';
-    res.json({ response });
+    const mainResponse = chatResponse.choices?.[0]?.message?.content?.trim() || '';
+    conversation.push({ agent: agent.name, role: 'assistant', content: mainResponse });
+
+    // Sequentially pass the response to each connected agent
+    let prevMessage = mainResponse;
+    for (const connAgent of agent.connections) {
+      // Only process if connAgent is a valid ObjectId or document
+      if (!connAgent || (typeof connAgent === 'object' && 'equals' in connAgent && connAgent == null)) continue;
+      let connected: any = connAgent;
+      // If it's just an ObjectId, fetch the full document
+      if (typeof connAgent === 'object' && !('config' in connAgent) && typeof connAgent._id === 'undefined') {
+        const found = await Agent.findById(connAgent as import('mongoose').Types.ObjectId);
+        if (!found) continue;
+        connected = found;
+      }
+      // Only proceed if connected is a valid document
+      if (!connected || typeof connected !== 'object' || !('config' in connected)) continue;
+      const connSystemPrompt = (connected as any).config?.systemPrompt || `You are agent ${(connected as any).name}, a helpful assistant.`;
+      const connChatResponse = await client.chat.completions.create({
+        model: deployment,
+        messages: [
+          { role: 'system', content: connSystemPrompt },
+          { role: 'user', content: prevMessage },
+        ],
+        temperature: 0.7,
+      });
+      const connResponse = connChatResponse.choices?.[0]?.message?.content?.trim() || '';
+      conversation.push({ agent: (connected as any).name, role: 'assistant', content: connResponse });
+      prevMessage = connResponse;
+    }
+
+    res.json({ conversation });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

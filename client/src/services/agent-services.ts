@@ -65,13 +65,13 @@ export async function getPipelines(jwtToken: string): Promise<PipelineDTO[]> {
   return handleJson<PipelineDTO[]>(res);
 }
 
-export async function sendMessageToAgent(jwtToken: string, agentId: string, message: string): Promise<{ response: string }> {
+export async function sendMessageToAgent(jwtToken: string, agentId: string, message: string): Promise<{ conversation: { agent: string, role: string, content: string }[] }> {
   const res = await fetch(`${API_BASE}/agents/${agentId}/message`, {
     method: 'POST',
     headers: buildHeaders(jwtToken),
     body: JSON.stringify({ message }),
   });
-  return handleJson<{ response: string }>(res);
+  return handleJson<{ conversation: { agent: string, role: string, content: string }[] }>(res);
 }
 
 export async function updateAgentConnections(jwtToken: string, agentId: string, connections: string[]): Promise<AgentDTO> {

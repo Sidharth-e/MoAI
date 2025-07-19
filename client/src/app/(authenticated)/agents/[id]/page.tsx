@@ -4,11 +4,13 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   AgentDTO,
-  getAgents,
   getAgents as getAgentList,
   sendMessageToAgent,
   updateAgentConnections,
 } from "@/services/agent-services";
+import AgentSideBar from "@/components/AgentSideBar";
+import ChatMessage from "@/components/ChatMessage";
+import { FiUsers } from "react-icons/fi";
 
 const AgentChatPage = () => {
   const { id } = useParams();
@@ -19,10 +21,12 @@ const AgentChatPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
-  const [chatHistory, setChatHistory] = useState<{ role: string; content: string }[]>([]);
+  // Change chatHistory type to include agentName for assistant messages
+  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'assistant'; content: string; agentName?: string }[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
   const [connEdits, setConnEdits] = useState<string[]>([]);
   const [connLoading, setConnLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Fetch agents and current agent
   const fetchAgents = async () => {
@@ -51,13 +55,21 @@ const AgentChatPage = () => {
   const handleSendChat = async () => {
     if (!session?.user?.jwtToken || !chatInput.trim() || !agent) return;
     setChatLoading(true);
-    setChatHistory((prev) => [...prev, { role: "user", content: chatInput }]);
+    setChatHistory((prev) => [...prev, { role: 'user', content: chatInput }]);
     try {
       const res = await sendMessageToAgent(session.user.jwtToken, agent._id, chatInput);
-      setChatHistory((prev) => [...prev, { role: "assistant", content: res.response }]);
+      // Append each agent's response in order, showing which agent said what
+      setChatHistory((prev) => [
+        ...prev,
+        ...res.conversation.map((msg) => ({
+          role: 'assistant' as const,
+          content: msg.content,
+          agentName: msg.agent,
+        })),
+      ]);
       setChatInput("");
     } catch (e: any) {
-      setChatHistory((prev) => [...prev, { role: "assistant", content: e.message || "Error" }]);
+      setChatHistory((prev) => [...prev, { role: 'assistant', content: e.message || 'Error' }]);
     } finally {
       setChatLoading(false);
     }
@@ -81,60 +93,18 @@ const AgentChatPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Agents</h2>
-          <div className="flex flex-col gap-1">
-            {agents.map((a) => (
-              <button
-                key={a._id}
-                onClick={() => router.push(`/agents/${a._id}`)}
-                className={`text-left px-3 py-2 rounded transition font-medium ${
-                  a._id === id
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200"
-                    : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
-                }`}
-              >
-                {a.name}
-              </button>
-            ))}
-          </div>
-        </div>
-        {/* Connections */}
-        {agent && (
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Connections:</label>
-            <select
-              multiple
-              value={connEdits}
-              onChange={(e) => {
-                const options = Array.from(e.target.selectedOptions).map((o) => o.value);
-                handleConnEdit(options);
-              }}
-              className="w-full rounded border px-2 py-1 text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              {agents.filter((a) => a._id !== agent._id).map((a) => (
-                <option key={a._id} value={a._id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={handleSaveConnections}
-              className="mt-2 w-full bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs disabled:opacity-60"
-              disabled={connLoading}
-            >
-              Save Connections
-            </button>
-          </div>
-        )}
-      </aside>
+    <div className="flex flex-grow min-h-screen bg-slate-50 dark:bg-slate-900 relative">
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col items-center justify-start py-10 px-4 sm:px-8">
         <div className="w-full max-w-2xl">
+          {/* Sidebar toggle button (only on mobile/small screens) */}
+          <button
+            className="fixed right-4 top-4 z-50 bg-blue-600 text-white rounded-full p-2 shadow-lg sm:hidden"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open agent sidebar"
+          >
+            <FiUsers size={24} />
+          </button>
           {agent ? (
             <>
               <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">{agent.name}</h1>
@@ -145,17 +115,12 @@ const AgentChatPage = () => {
                   <div className="text-slate-400 italic">No conversation yet.</div>
                 ) : (
                   chatHistory.map((msg, idx) => (
-                    <div
+                    <ChatMessage
                       key={idx}
-                      className={`px-3 py-2 rounded-lg max-w-[80%] ${
-                        msg.role === "user"
-                          ? "bg-blue-100 dark:bg-blue-900 self-end text-right"
-                          : "bg-slate-100 dark:bg-slate-700 self-start"
-                      }`}
-                    >
-                      <span className="block text-xs text-slate-500 mb-1">{msg.role === "user" ? "You" : agent.name}</span>
-                      <span className="whitespace-pre-line">{msg.content}</span>
-                    </div>
+                      role={msg.role}
+                      content={msg.content}
+                      agentName={msg.agentName}
+                    />
                   ))
                 )}
               </div>
@@ -191,6 +156,29 @@ const AgentChatPage = () => {
           {error && <div className="text-red-500 text-sm mt-4">{error}</div>}
         </div>
       </main>
+      {/* Agent Sidebar (right) */}
+      <AgentSideBar
+        agents={agents}
+        currentAgentId={id as string}
+        onSelectAgent={(aid) => {
+          setSidebarOpen(false);
+          router.push(`/agents/${aid}`);
+        }}
+        connEdits={connEdits}
+        onConnEdit={handleConnEdit}
+        onSaveConnections={handleSaveConnections}
+        connLoading={connLoading}
+        show={sidebarOpen || typeof window !== 'undefined' && window.innerWidth >= 640}
+        onClose={() => setSidebarOpen(false)}
+      />
+      {/* Overlay for mobile when sidebar is open */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 z-30 sm:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close sidebar overlay"
+        />
+      )}
     </div>
   );
 };
