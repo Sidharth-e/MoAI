@@ -1,16 +1,8 @@
 @import "tailwindcss";
-@plugin '@tailwindcss/typography';
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -63,4 +55,7 @@ body::-webkit-scrollbar-button,
 }
 .prose > pre {
   background-color: transparent !important; /* Affects only direct children within prose */
+}
+.agent-sidebar-z {
+  z-index: 9999;
 }

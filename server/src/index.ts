@@ -10,8 +10,6 @@ import chatRoute from "./routes/chat.route";
 import chatThreadRoutes from "./routes/chatThread.route";
 import chatMessageRoutes from "./routes/chatMessage.route";
 import mcpRoutes from "./routes/mcp.route";
-import agentRoutes from './routes/agent.route';
-import pipelineRoutes from './routes/pipeline.route';
 
 
 dotenv.config();
@@ -42,8 +40,6 @@ app.use("/api/chat",authenticateMiddleware, chatRoute);
 app.use("/api/chat-threads", authenticateMiddleware, chatThreadRoutes); // For chat threads (list, create)
 app.use("/api/chat-messages", authenticateMiddleware, chatMessageRoutes); // For chat messages (post, get by thread)
 app.use("/api/mcp",mcpRoutes)
-app.use("/api/agents", authenticateMiddleware, agentRoutes);
-app.use("/api/pipelines", authenticateMiddleware, pipelineRoutes);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => console.log(`Listening on port ${port}...`));

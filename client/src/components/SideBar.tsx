@@ -37,7 +37,6 @@ const Sidebar: React.FC = () => {
     { href: "/discover", icon: <FiCompass size={22} />, label: "Discover" },
     { href: "/profile", icon: <FiUser size={22} />, label: "Profile" },
     { href: "/settings", icon: <FiSettings size={22} />, label: "Settings" },
-    { href: "/agents", icon: <FiUsers size={22} />, label: "Agents" },
   ];
 
   const isActive = (href: string, match?: (p: string) => boolean) =>
@@ -70,7 +69,6 @@ const Sidebar: React.FC = () => {
       {/* Sidebar Icons */}
       <nav
         aria-label="Primary"
-        aria-expanded={isOpen}
         className={`flex flex-col items-center border-r border-slate-300 bg-slate-50 py-4 dark:border-slate-700 dark:bg-slate-900 transition-all duration-300 w-14 sm:w-16`}
       >
         {/* Toggle Button */}
