@@ -66,6 +66,7 @@ server/
 ## Environment Variables
 - `DB` — MongoDB connection string (required)
 - `PORT` — Port to run the server (optional, defaults to 8080)
+- `OPENWEATHER_API_KEY` — API key for OpenWeatherMap (required for real weather data)
 
 ## Dependencies
 - express, mongoose, dotenv, cors, bcrypt, jsonwebtoken, axios, joi, @huggingface/inference, @modelcontextprotocol/sdk, openai

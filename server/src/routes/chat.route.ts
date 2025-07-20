@@ -150,7 +150,13 @@ router.post("/", async (req: Request, res: Response) => {
           if (handler) {
             try {
               const result = await handler(args);
-              toolResult = typeof result === "string" ? result : JSON.stringify(result);
+              if (typeof result === "string") {
+                toolResult = result;
+              } else if (result && Array.isArray(result.content) && result.content[0]?.text) {
+                toolResult = result.content[0].text;
+              } else {
+                toolResult = JSON.stringify(result);
+              }
             } catch (e) {
               toolResult = `Error: ${e}`;
             }
