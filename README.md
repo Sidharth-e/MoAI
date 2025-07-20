@@ -172,6 +172,31 @@ MIT
 
 ---
 
+## 🙏 Credits
+
+### 🛠️ Technologies & Libraries
+- **Frontend Framework**: [Next.js](https://nextjs.org/) - React framework for production
+- **UI Framework**: [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- **Authentication**: [NextAuth.js](https://next-auth.js.org/) - Complete authentication solution
+- **Backend Framework**: [Express.js](https://expressjs.com/) - Fast, unopinionated web framework
+- **Database**: [MongoDB](https://www.mongodb.com/) - NoSQL database
+- **AI Services**: 
+  - [Hugging Face](https://huggingface.co/) - Open source AI models
+  - [Azure OpenAI](https://azure.microsoft.com/en-us/products/ai-services/openai-service) - Enterprise AI services
+  - [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) - AI model integration protocol
+
+### 🎨 UI Components & Design
+- **Chat UI Skeleton**: [Langui.dev Components](https://www.langui.dev/components) - Modern chat interface components and design patterns
+- Icons provided by [Lucide React](https://lucide.dev/) - Beautiful & consistent icon toolkit
+- UI components inspired by modern design systems
+
+### 📚 Learning Resources
+- Next.js documentation and examples
+- React patterns and best practices
+- MongoDB and Express.js tutorials
+
+---
+
 ## 🙌 Contributing
 Pull requests and issues are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
