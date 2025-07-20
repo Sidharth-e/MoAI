@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@huggingface/inference": "^4.4.0",
+    "@mendable/firecrawl-js": "^1.29.1",
     "@modelcontextprotocol/sdk": "^1.16.0",
     "axios": "^1.6.0",
     "bcrypt": "^5.0.1",

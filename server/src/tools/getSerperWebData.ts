@@ -31,6 +31,7 @@ export const getSerperWebData = {
         }
       );
       const data = response.data;
+      console.log(data);
       return {
         content: [
           {
