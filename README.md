@@ -1,32 +1,40 @@
-# MoAI
+# 🤖 MoAI
 
-MoAI is a full-stack web application featuring a Next.js frontend and a Node.js/Express backend. It provides chat functionality, user authentication, and integration with external APIs and services.
+![MoAI Screenshot](client/public/home.png)
+![MoAI Screenshot](client/public/chat.png)
 
-## Project Structure
+MoAI is a full-stack, modern AI chat platform featuring a Next.js frontend and a Node.js/Express backend. It offers real-time chat, user authentication, and seamless integration with external APIs and AI services.
+
+---
+
+## 🗂️ Project Structure
 
 ```
 MoAI/
-  client/   # Next.js frontend
-  server/   # Node.js/Express backend
+  client/   # Next.js frontend (React, TypeScript)
+  server/   # Node.js/Express backend (TypeScript, MongoDB)
 ```
 
-### Client (`client/`)
+- **client/**: Frontend web app (Next.js, React, Tailwind CSS, NextAuth.js)
+- **server/**: Backend API (Express, MongoDB, JWT, HuggingFace, OpenAI, MCP)
 
-- Built with Next.js and React.
-- Handles user authentication, chat UI, and settings.
-- Communicates with the backend via API routes.
+---
 
-### Server (`server/`)
+## ✨ Features
 
-- Built with Node.js and Express.
-- Manages user data, chat threads, and messages.
-- Integrates with external services (e.g., HuggingFace, weather, web data, Model Context Protocol).
-- Connects to a MongoDB database.
+- 🔐 **User Authentication** (NextAuth.js, JWT)
+- 💬 **Real-time Chat Interface**
+- 🧵 **Chat Threads & History**
+- 🧠 **AI Integrations**: HuggingFace, Azure OpenAI, Model Context Protocol (MCP)
+- 🌐 **Web & Weather API Tools**
+- ⚙️ **User Settings & Profile Management**
+- 🖥️ **Modern, Responsive UI**
 
-## Getting Started
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-
 - Node.js (v16+ recommended)
 - npm or yarn
 - MongoDB instance (local or cloud)
@@ -38,20 +46,14 @@ MoAI/
    git clone <repo-url>
    cd MoAI
    ```
-
 2. **Install dependencies for both client and server:**
    ```bash
-   cd client
-   npm install
-   cd ../server
-   npm install
+   cd client && npm install
+   cd ../server && npm install
    ```
-
 3. **Set up environment variables:**
    - Copy `.env.example` to `.env` in both `client/` and `server/` directories and fill in the required values.
-
 4. **Run the development servers:**
-
    - **Client:**
      ```bash
      cd client
@@ -63,60 +65,118 @@ MoAI/
      npm run dev
      ```
 
-## Features
+---
 
-- User authentication (NextAuth.js)
-- Real-time chat interface
-- Chat history and threads
-- Integration with external APIs (HuggingFace, weather, web search)
-- **Model Context Protocol (MCP) API and tools**
-- Settings and user profile management
+## 🏗️ Folder Structure
 
-## API Overview
+### Client (`client/`)
+```
+client/
+  src/
+    app/
+      (authenticated)/      # Protected routes (chat, home, etc.)
+      layout.tsx            # Root layout
+      page.tsx              # Landing page
+      globals.css           # Global styles
+    components/             # UI components (Chat, Sidebar, etc.)
+    contexts/               # React context providers
+    features/               # Feature modules (auth, navigation, etc.)
+    lib/                    # Utility libraries (JWT, MongoDB, etc.)
+    services/               # API service functions
+    types/                  # TypeScript types and declarations
+  public/                   # Static assets (SVGs, screenshot, etc.)
+```
 
+### Server (`server/`)
+```
+server/
+  src/
+    db.ts                # MongoDB connection
+    index.ts             # Entry point
+    middleware/          # Express middlewares
+    models/              # Mongoose models
+    routes/              # API route handlers
+    services/            # Service logic (e.g., AOAI)
+    tools/               # Utility tools (web, weather, etc.)
+    interface/           # TypeScript interfaces
+```
+
+---
+
+## 🖥️ Main UI Routes
+| Path            | Description                       |
+|-----------------|-----------------------------------|
+| `/`             | Landing page                      |
+| `/chat`         | Chat interface (authenticated)    |
+| `/chat/[id]`    | Individual chat thread            |
+| `/unauthorized` | Unauthorized access page          |
+
+---
+
+## 🛠️ API Overview
 | Route                        | Description                        |
 |------------------------------|------------------------------------|
 | `/api/user`                  | User authentication & management   |
-| `/huggingFace/redye`         | Hugging Face API integration       |
+| `/api/huggingFace/chat`      | Hugging Face API integration       |
 | `/api/chat`                  | Chat operations                    |
 | `/api/chat-threads`          | Chat thread management             |
 | `/api/chat-messages`         | Chat message management            |
-| `/api/mcp`                   | **Model Context Protocol (MCP) API** |
+| `/api/mcp`                   | Model Context Protocol (MCP) API   |
 
 > All routes (except `/api/mcp`) require authentication via JWT.
 
-### MCP API
+---
 
-The MCP API is available at `/api/mcp` on the server. It exposes tools such as weather, web data, and website details via the [Model Context Protocol](https://modelcontext.com/). This endpoint is compatible with MCP clients and tools.
-
-## Development & Debugging Tools
-
-### MCP Inspector
-
-You can use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) to debug and interact with the MCP API.
-
-**To run the MCP Inspector:**
-
-1. Open a terminal in the `server` directory:
-   ```bash
-   cd server
-   npm run inspector
-   ```
-   This will launch the MCP Inspector tool.
-
-2. When prompted for the MCP API URL, use:
-   ```
-   http://localhost:8080/api/mcp
-   ```
-   (or replace `8080` with your configured server port)
-
-## Contributing
-
-Contributions are welcome! Please open issues or pull requests for any improvements or bug fixes.
-
-## License
-
-[MIT](LICENSE)
+## 🧩 Key Components & Tech
+- **Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS, NextAuth.js
+- **Backend:** Node.js, Express, MongoDB, Mongoose, JWT, HuggingFace(Open Source model), OpenAI, MCP
+- **Integrations:**
+  - 🔗 HuggingFace (AI Inference)
+  - 🔗 Azure OpenAI
+  - 🔗 Model Context Protocol (MCP)
+  - 🌦️ OpenWeatherMap (weather)
+  - 🌐 Serper (web search)
+- **UI Components:**
+  - `ChatContainer`, `ChatList`, `ChatMessage` — Chat UI
+  - `SideBar` — Navigation sidebar
+  - `NewChat` — Chat thread actions
+  - `MarkdownCodeBlock` — Markdown/code rendering
 
 ---
+
+## ⚙️ Environment Variables
+- **Client:** See `.env.example` in `client/` for NextAuth, API URLs, etc.
+- **Server:** See `.env.example` in `server/` for MongoDB, API keys, etc.
+  - `DB` — MongoDB connection string (required)
+  - `PORT` — Port to run the server (optional, defaults to 8080)
+  - `OPENWEATHER_API_KEY` — API key for OpenWeatherMap
+  - `SERPER_API_KEY` — API key for Serper web search
+  - `FIRECRAWL_API_KEY` — API key for Firecrawl web scraping
+
+---
+
+## 📦 Scripts
+- **Client:**
+  - `npm run dev` — Start development server
+  - `npm run build` — Build for production
+  - `npm start` — Start production server
+  - `npm run lint` — Lint codebase
+- **Server:**
+  - `npm run dev` — Start server with hot-reloading
+  - `npm start` — Start server in production mode
+
+---
+
+## 📄 License
+MIT
+
+---
+
+## 🙌 Contributing
+Pull requests and issues are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+---
+
+## 💡 Tips
+- For more details, see the source code in each folder and the sub-READMEs in `client/` and `server/`.
 

@@ -3,7 +3,7 @@
 This is the frontend for the MoAI project, built with Next.js, React, and TypeScript. It provides a modern, authenticated chat interface, settings, and integration with backend AI services.
 
 ## Features
-- Secure authentication (NextAuth.js, JWT)
+- Azure AD Secure authentication (NextAuth.js, JWT)
 - Chat interface with threads and message history
 - Markdown and code block rendering
 - Search and create chat threads
@@ -16,7 +16,7 @@ This is the frontend for the MoAI project, built with Next.js, React, and TypeSc
 client/
   src/
     app/
-      (authenticated)/      # Protected routes (chat, settings, etc.)
+      (authenticated)/      # Protected routes (chat, home, etc.)
       layout.tsx            # Root layout
       page.tsx              # Landing page
       globals.css           # Global styles
@@ -60,14 +60,12 @@ client/
 | `/`                         | Landing page                      |
 | `/chat`                     | Chat interface (authenticated)    |
 | `/chat/[id]`                | Individual chat thread            |
-| `/settings`                 | User settings (authenticated)     |
 | `/unauthorized`             | Unauthorized access page          |
 
 ## Key Components
 - `ChatContainer`, `ChatList`, `ChatMessage` — Chat UI
 - `SideBar` — Navigation sidebar
 - `NewChat`, `SearchChat` — Chat thread actions
-- `Settings` — User settings UI
 - `MarkdownCodeBlock` — Markdown/code rendering
 
 ## Tech Stack
@@ -77,8 +75,6 @@ client/
 - MongoDB (via backend)
 
 ## License
-Specify your license here.
+MIT
 
 ---
-
-*For more details, see the source code in each folder.*
