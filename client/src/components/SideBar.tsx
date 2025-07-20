@@ -20,8 +20,6 @@ import ChatList from "./ChatList";
 import { useChatThreads } from "@/contexts/ChatThreadsContext";
 import { createChatThread } from "@/services/chat-services";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
-
 const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -34,9 +32,6 @@ const Sidebar: React.FC = () => {
   const navItems = [
     { href: "/", icon: <FiHome size={22} />, label: "Home" },
     { href: "/chat", icon: <FiMessageSquare size={22} />, label: "Chats", match: (p: string) => p.startsWith("/chat") },
-    { href: "/discover", icon: <FiCompass size={22} />, label: "Discover" },
-    { href: "/profile", icon: <FiUser size={22} />, label: "Profile" },
-    { href: "/settings", icon: <FiSettings size={22} />, label: "Settings" },
   ];
 
   const isActive = (href: string, match?: (p: string) => boolean) =>

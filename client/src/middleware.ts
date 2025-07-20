@@ -1,8 +1,8 @@
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 
-const requireAuth: string[] = ["/chat", "/api", "/settings"];
-const requireAdmin: string[] = ["/reporting"];
+const requireAuth: string[] = ["/chat", "/api"];
+const requireAdmin: string[] = [];
 
 export async function middleware(request: NextRequest) {
   const res = NextResponse.next();
@@ -39,6 +39,5 @@ export const config = {
     "/unauthorized/:path*",
     "/api/chat:path*",
     "/chat/:path*",
-    "/settings",
   ],
 };
