@@ -9,7 +9,6 @@ import huggingFaceRoute from "./routes/huggingFace.route";
 import chatRoute from "./routes/chat.route";
 import chatThreadRoutes from "./routes/chatThread.route";
 import chatMessageRoutes from "./routes/chatMessage.route";
-import mcpRoutes from "./routes/mcp.route";
 
 
 dotenv.config();
@@ -39,7 +38,6 @@ app.use("/huggingFace/redye", authenticateMiddleware, huggingFaceRoute);
 app.use("/api/chat",authenticateMiddleware, chatRoute);
 app.use("/api/chat-threads", authenticateMiddleware, chatThreadRoutes); // For chat threads (list, create)
 app.use("/api/chat-messages", authenticateMiddleware, chatMessageRoutes); // For chat messages (post, get by thread)
-app.use("/api/mcp",mcpRoutes)
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => console.log(`Listening on port ${port}...`));

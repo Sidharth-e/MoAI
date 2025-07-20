@@ -2,10 +2,6 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { ChatMessage } from "../models/chatMessage";
 import { createAzureOpenAIClient } from "../services/aoai";
-import { parseResume } from "../tools/parseResume";
-import { parseJD } from "../tools/parseJD";
-import { matchResumeToJd } from "../tools/matchResumeToJd";
-import { summarizeGap } from "../tools/summarizeGap";
 import { getWeather } from "../tools/getWeather";
 
 // Load environment variables
@@ -58,64 +54,6 @@ router.post("/", async (req: Request, res: Response) => {
       {
         type: "function",
         function: {
-          name: parseResume.name,
-          description: "Parse a resume and extract structured information (name, education, skills, work experience)",
-          parameters: {
-            type: "object",
-            properties: {
-              resume: { type: "string", description: "The resume text to parse." },
-            },
-            required: ["resume"],
-          },
-        },
-      },
-      {
-        type: "function",
-        function: {
-          name: parseJD.name,
-          description: "Parse a job description and extract structured information (title, responsibilities, skills)",
-          parameters: {
-            type: "object",
-            properties: {
-              jd: { type: "string", description: "The job description text to parse." },
-            },
-            required: ["jd"],
-          },
-        },
-      },
-      {
-        type: "function",
-        function: {
-          name: matchResumeToJd.name,
-          description: "Compare a resume and job description, listing matched and missing skills, and a match score.",
-          parameters: {
-            type: "object",
-            properties: {
-              resume: { type: "string", description: "The resume text." },
-              jd: { type: "string", description: "The job description text." },
-            },
-            required: ["resume", "jd"],
-          },
-        },
-      },
-      {
-        type: "function",
-        function: {
-          name: summarizeGap.name,
-          description: "Generate a professional gap analysis summary comparing a resume and job description.",
-          parameters: {
-            type: "object",
-            properties: {
-              resume: { type: "string", description: "The resume text." },
-              jd: { type: "string", description: "The job description text." },
-            },
-            required: ["resume", "jd"],
-          },
-        },
-      },
-      {
-        type: "function",
-        function: {
           name: getWeather.name,
           description: "Get the current (dummy) weather for a city.",
           parameters: {
@@ -139,10 +77,6 @@ router.post("/", async (req: Request, res: Response) => {
 
     // Tool handler map
     const toolHandlers: Record<string, Function> = {
-      [parseResume.name]: parseResume.handler,
-      [parseJD.name]: parseJD.handler,
-      [matchResumeToJd.name]: matchResumeToJd.handler,
-      [summarizeGap.name]: summarizeGap.handler,
       [getWeather.name]: getWeather.handler,
     };
 
