@@ -13,15 +13,15 @@ const router = express.Router();
 
 // POST route for Hugging Face inference
 router.post("/", async (req: Request, res: Response) => {
-  const { html } = req.body;
-  if (!html || typeof html !== "string") {
-    return res.status(400).json({ error: "Invalid HTML input" });
+  const { userMessage } = req.body;
+  if (!userMessage || typeof userMessage !== "string") {
+    return res.status(400).json({ error: "Invalid userMessage input" });
   }
 
   const prompt = `
 You are a helpful assistant 
 **HTML Code**
-${html}
+${userMessage}
 `;
 
   try {
