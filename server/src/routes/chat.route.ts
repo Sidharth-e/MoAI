@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import { ChatMessage } from "../models/chatMessage";
 import { createAzureOpenAIClient } from "../services/aoai";
 import { getWeather } from "../tools/getWeather";
+import { getSerperWebData } from "../tools/getSerperWebData";
+import { getFirecrawlWebsiteDetails } from "../tools/getFirecrawlWebsiteDetails";
 
 // Load environment variables
 dotenv.config();
@@ -65,6 +67,34 @@ router.post("/", async (req: Request, res: Response) => {
           },
         },
       },
+      {
+        type: "function",
+        function: {
+          name: getSerperWebData.name,
+          description: "Get real-time web data using Serper API.",
+          parameters: {
+            type: "object",
+            properties: {
+              query: { type: "string", description: "The search query to get web data for." },
+            },
+            required: ["query"],
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
+          name: getFirecrawlWebsiteDetails.name,
+          description: "Get full website details using Firecrawl API.",
+          parameters: {
+            type: "object",
+            properties: {
+              url: { type: "string", description: "The URL of the website to get details for." },
+            },
+            required: ["url"],
+          },
+        },
+      },
     ] as const;
 
     const { client, deployment } = createAzureOpenAIClient();
@@ -78,6 +108,8 @@ router.post("/", async (req: Request, res: Response) => {
     // Tool handler map
     const toolHandlers: Record<string, Function> = {
       [getWeather.name]: getWeather.handler,
+      [getSerperWebData.name]: getSerperWebData.handler,
+      [getFirecrawlWebsiteDetails.name]: getFirecrawlWebsiteDetails.handler,
     };
 
     // Helper to stream data to client
