@@ -10,8 +10,6 @@ MoAI/
   server/   # Node.js/Express backend
 ```
 
-Let me know if you want to add badges, screenshots, or more detailed setup instructions!
-
 ### Client (`client/`)
 
 - Built with Next.js and React.
@@ -22,7 +20,7 @@ Let me know if you want to add badges, screenshots, or more detailed setup instr
 
 - Built with Node.js and Express.
 - Manages user data, chat threads, and messages.
-- Integrates with external services (e.g., HuggingFace, weather, web data).
+- Integrates with external services (e.g., HuggingFace, weather, web data, Model Context Protocol).
 - Connects to a MongoDB database.
 
 ## Getting Started
@@ -71,7 +69,46 @@ Let me know if you want to add badges, screenshots, or more detailed setup instr
 - Real-time chat interface
 - Chat history and threads
 - Integration with external APIs (HuggingFace, weather, web search)
+- **Model Context Protocol (MCP) API and tools**
 - Settings and user profile management
+
+## API Overview
+
+| Route                        | Description                        |
+|------------------------------|------------------------------------|
+| `/api/user`                  | User authentication & management   |
+| `/huggingFace/redye`         | Hugging Face API integration       |
+| `/api/chat`                  | Chat operations                    |
+| `/api/chat-threads`          | Chat thread management             |
+| `/api/chat-messages`         | Chat message management            |
+| `/api/mcp`                   | **Model Context Protocol (MCP) API** |
+
+> All routes (except `/api/mcp`) require authentication via JWT.
+
+### MCP API
+
+The MCP API is available at `/api/mcp` on the server. It exposes tools such as weather, web data, and website details via the [Model Context Protocol](https://modelcontext.com/). This endpoint is compatible with MCP clients and tools.
+
+## Development & Debugging Tools
+
+### MCP Inspector
+
+You can use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) to debug and interact with the MCP API.
+
+**To run the MCP Inspector:**
+
+1. Open a terminal in the `server` directory:
+   ```bash
+   cd server
+   npm run inspector
+   ```
+   This will launch the MCP Inspector tool.
+
+2. When prompted for the MCP API URL, use:
+   ```
+   http://localhost:8080/api/mcp
+   ```
+   (or replace `8080` with your configured server port)
 
 ## Contributing
 
@@ -83,4 +120,3 @@ Contributions are welcome! Please open issues or pull requests for any improveme
 
 ---
 
-*This is a starter README. Please update with more specific details as your project evolves.*
