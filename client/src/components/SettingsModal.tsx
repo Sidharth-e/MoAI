@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { X, Settings as SettingsIcon, Moon, Sun, Volume2, VolumeX, Palette, Globe, Shield, User, Bell } from "lucide-react";
+import { X, Settings as SettingsIcon, Moon, Sun, Volume2, VolumeX, Palette, Globe, Shield, User, Bell, Bot, MessageSquare, Zap, Eye, EyeOff, Database, Smartphone, Monitor } from "lucide-react";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -11,22 +11,48 @@ interface SettingOption {
   id: string;
   label: string;
   description: string;
-  type: "toggle" | "select" | "input" | "button";
+  type: "toggle" | "select" | "input" | "button" | "slider";
   value?: any;
   options?: { label: string; value: string }[];
   icon?: React.ReactNode;
+  min?: number;
+  max?: number;
+  step?: number;
 }
 
+type SettingsTab = "general" | "ai" | "privacy" | "advanced";
+
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [settings, setSettings] = useState({
+    // General settings
     theme: "system",
     language: "en",
     notifications: true,
     sound: true,
     autoSave: true,
     fontSize: "medium",
+    
+    // AI settings
+    model: "gpt-4",
+    temperature: 0.7,
+    maxTokens: "2048",
+    conversationMemory: true,
+    autoComplete: true,
+    codeHighlighting: true,
+    markdownRendering: true,
+    
+    // Privacy settings
     privacyMode: false,
     dataCollection: true,
+    conversationHistory: true,
+    shareAnalytics: false,
+    
+    // Advanced settings
+    streaming: true,
+    cacheResponses: true,
+    debugMode: false,
+    performanceMode: "balanced"
   });
 
   const handleSettingChange = (key: string, value: any) => {
@@ -36,7 +62,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }));
   };
 
-  const settingOptions: SettingOption[] = [
+  const generalSettings: SettingOption[] = [
     {
       id: "theme",
       label: "Theme",
@@ -60,9 +86,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         { label: "English", value: "en" },
         { label: "Spanish", value: "es" },
         { label: "French", value: "fr" },
-        { label: "German", value: "de" }
+        { label: "German", value: "de" },
+        { label: "Chinese", value: "zh" },
+        { label: "Japanese", value: "ja" }
       ],
       icon: <Globe className="w-5 h-5" />
+    },
+    {
+      id: "fontSize",
+      label: "Font Size",
+      description: "Adjust the text size for better readability",
+      type: "select",
+      value: settings.fontSize,
+      options: [
+        { label: "Small", value: "small" },
+        { label: "Medium", value: "medium" },
+        { label: "Large", value: "large" },
+        { label: "Extra Large", value: "xl" }
+      ],
+      icon: <User className="w-5 h-5" />
     },
     {
       id: "notifications",
@@ -87,36 +129,156 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       type: "toggle",
       value: settings.autoSave,
       icon: <Shield className="w-5 h-5" />
+    }
+  ];
+
+  const aiSettings: SettingOption[] = [
+    {
+      id: "model",
+      label: "AI Model",
+      description: "Choose the AI model for your conversations",
+      type: "select",
+      value: settings.model,
+      options: [
+        { label: "GPT-4 (Recommended)", value: "gpt-4" },
+        { label: "GPT-3.5 Turbo", value: "gpt-3.5-turbo" },
+        { label: "Claude 3 Opus", value: "claude-3-opus" },
+        { label: "Claude 3 Sonnet", value: "claude-3-sonnet" },
+        { label: "Gemini Pro", value: "gemini-pro" }
+      ],
+      icon: <Bot className="w-5 h-5" />
     },
     {
-      id: "fontSize",
-      label: "Font Size",
-      description: "Adjust the text size for better readability",
-      type: "select",
-      value: settings.fontSize,
-      options: [
-        { label: "Small", value: "small" },
-        { label: "Medium", value: "medium" },
-        { label: "Large", value: "large" },
-        { label: "Extra Large", value: "xl" }
-      ],
-      icon: <User className="w-5 h-5" />
+      id: "temperature",
+      label: "Creativity",
+      description: "Control how creative or focused the AI responses are",
+      type: "slider",
+      value: settings.temperature,
+      min: 0,
+      max: 2,
+      step: 0.1,
+      icon: <Zap className="w-5 h-5" />
     },
+    {
+      id: "maxTokens",
+      label: "Response Length",
+      description: "Maximum length of AI responses",
+      type: "select",
+      value: settings.maxTokens,
+      options: [
+        { label: "Short (1024)", value: "1024" },
+        { label: "Medium (2048)", value: "2048" },
+        { label: "Long (4096)", value: "4096" },
+        { label: "Very Long (8192)", value: "8192" }
+      ],
+      icon: <MessageSquare className="w-5 h-5" />
+    },
+    {
+      id: "conversationMemory",
+      label: "Conversation Memory",
+      description: "AI remembers context from previous messages",
+      type: "toggle",
+      value: settings.conversationMemory,
+      icon: <Database className="w-5 h-5" />
+    },
+    {
+      id: "autoComplete",
+      label: "Auto-complete",
+      description: "AI suggests completions as you type",
+      type: "toggle",
+      value: settings.autoComplete,
+      icon: <Zap className="w-5 h-5" />
+    },
+    {
+      id: "codeHighlighting",
+      label: "Code Highlighting",
+      description: "Syntax highlighting for code blocks",
+      type: "toggle",
+      value: settings.codeHighlighting,
+      icon: <Monitor className="w-5 h-5" />
+    },
+    {
+      id: "markdownRendering",
+      label: "Markdown Rendering",
+      description: "Render markdown formatting in responses",
+      type: "toggle",
+      value: settings.markdownRendering,
+      icon: <MessageSquare className="w-5 h-5" />
+    }
+  ];
+
+  const privacySettings: SettingOption[] = [
     {
       id: "privacyMode",
       label: "Privacy Mode",
       description: "Hide sensitive information from screenshots",
       type: "toggle",
       value: settings.privacyMode,
-      icon: <Shield className="w-5 h-5" />
+      icon: settings.privacyMode ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />
+    },
+    {
+      id: "conversationHistory",
+      label: "Save Conversation History",
+      description: "Store your chat history locally",
+      type: "toggle",
+      value: settings.conversationHistory,
+      icon: <Database className="w-5 h-5" />
     },
     {
       id: "dataCollection",
-      label: "Data Collection",
-      description: "Allow anonymous usage data collection",
+      label: "Usage Analytics",
+      description: "Help improve the service with anonymous usage data",
       type: "toggle",
       value: settings.dataCollection,
       icon: <Shield className="w-5 h-5" />
+    },
+    {
+      id: "shareAnalytics",
+      label: "Share Analytics",
+      description: "Share conversation data for research purposes",
+      type: "toggle",
+      value: settings.shareAnalytics,
+      icon: <Database className="w-5 h-5" />
+    }
+  ];
+
+  const advancedSettings: SettingOption[] = [
+    {
+      id: "streaming",
+      label: "Streaming Responses",
+      description: "Show AI responses as they're generated",
+      type: "toggle",
+      value: settings.streaming,
+      icon: <Zap className="w-5 h-5" />
+    },
+    {
+      id: "cacheResponses",
+      label: "Cache Responses",
+      description: "Store responses for faster access",
+      type: "toggle",
+      value: settings.cacheResponses,
+      icon: <Database className="w-5 h-5" />
+    },
+    {
+      id: "performanceMode",
+      label: "Performance Mode",
+      description: "Balance between speed and quality",
+      type: "select",
+      value: settings.performanceMode,
+      options: [
+        { label: "Speed", value: "speed" },
+        { label: "Balanced", value: "balanced" },
+        { label: "Quality", value: "quality" }
+      ],
+      icon: <Zap className="w-5 h-5" />
+    },
+    {
+      id: "debugMode",
+      label: "Debug Mode",
+      description: "Show technical information and logs",
+      type: "toggle",
+      value: settings.debugMode,
+      icon: <Monitor className="w-5 h-5" />
     }
   ];
 
@@ -150,6 +312,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           </select>
         );
       
+      case "slider":
+        return (
+          <div className="flex items-center space-x-3">
+            <input
+              type="range"
+              min={option.min}
+              max={option.max}
+              step={option.step}
+              value={option.value}
+              onChange={(e) => handleSettingChange(option.id, parseFloat(e.target.value))}
+              className="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+            />
+            <span className="text-sm text-gray-600 dark:text-gray-400 min-w-[3rem]">
+              {option.value}
+            </span>
+          </div>
+        );
+      
       case "input":
         return (
           <input
@@ -173,6 +353,26 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const getCurrentSettings = () => {
+    switch (activeTab) {
+      case "general": return generalSettings;
+      case "ai": return aiSettings;
+      case "privacy": return privacySettings;
+      case "advanced": return advancedSettings;
+      default: return generalSettings;
+    }
+  };
+
+  const getTabIcon = (tab: SettingsTab) => {
+    switch (tab) {
+      case "general": return <SettingsIcon className="w-4 h-4" />;
+      case "ai": return <Bot className="w-4 h-4" />;
+      case "privacy": return <Shield className="w-4 h-4" />;
+      case "advanced": return <Zap className="w-4 h-4" />;
+      default: return <SettingsIcon className="w-4 h-4" />;
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -184,7 +384,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       />
       
       {/* Modal */}
-      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
@@ -201,10 +401,28 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
+        {/* Tabs */}
+        <div className="flex border-b border-gray-200 dark:border-gray-700">
+          {(["general", "ai", "privacy", "advanced"] as SettingsTab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex items-center space-x-2 px-6 py-3 text-sm font-medium transition-colors ${
+                activeTab === tab
+                  ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              }`}
+            >
+              {getTabIcon(tab)}
+              <span className="capitalize">{tab}</span>
+            </button>
+          ))}
+        </div>
+
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           <div className="space-y-6">
-            {settingOptions.map((option) => (
+            {getCurrentSettings().map((option) => (
               <div key={option.id} className="flex items-start justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div className="flex items-start space-x-3 flex-1">
                   <div className="text-gray-500 dark:text-gray-400 mt-1">
@@ -228,23 +446,27 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-gray-600 dark:text-white dark:border-gray-500 dark:hover:bg-gray-500"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              // Save settings logic would go here
-              console.log("Settings saved:", settings);
-              onClose();
-            }}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-          >
-            Save Changes
-          </button>
+        <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            Settings are automatically saved
+          </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => {
+                // Reset to defaults logic would go here
+                console.log("Settings reset to defaults");
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-gray-600 dark:text-white dark:border-gray-500 dark:hover:bg-gray-500"
+            >
+              Reset to Defaults
+            </button>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            >
+              Done
+            </button>
+          </div>
         </div>
       </div>
     </div>
