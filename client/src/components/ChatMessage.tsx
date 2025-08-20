@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import MarkdownCodeBlock from "./MarkdownCodeBlock";
-import { Copy, Check, ThumbsDown, ThumbsUp } from "lucide-react"; // <-- import Check here
+import { Copy, Check, ThumbsDown, ThumbsUp, RefreshCcw } from "lucide-react"; // <-- import Check here
 
 type ChatMessageProps = {
   role: "user" | "assistant";
@@ -70,6 +70,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, agentName }) =
             {/* Dislike */}
             <button className="hover:text-blue-600" title="Dislike">
               <ThumbsDown size={18} />
+            </button>
+            <button className="hover:text-blue-600" title="Regenerate">
+              <RefreshCcw size={18} />
             </button>
           </div>
         )}

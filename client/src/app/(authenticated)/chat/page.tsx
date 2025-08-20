@@ -27,7 +27,7 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <main className="flex-grow h-full overflow-hidden bg-slate-50 dark:bg-slate-900 relative overflow-hidden flex flex-col">
+    <main className="flex-grow h-full  bg-slate-50 dark:bg-slate-900 relative overflow-hidden flex flex-col">
       {/* Gradient Glow */}
       <div className="pointer-events-none absolute -top-32 -left-32 w-[600px] h-[600px] bg-gradient-to-tr from-blue-400/20 via-emerald-300/20 to-purple-400/10 blur-3xl rounded-full"></div>
 
