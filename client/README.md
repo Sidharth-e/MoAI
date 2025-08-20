@@ -2,16 +2,26 @@
 
 This is the frontend for the MoAI project, built with Next.js, React, and TypeScript. It provides a modern, authenticated chat interface, settings, and integration with backend AI services.
 
-## Features
-- Azure AD Secure authentication (NextAuth.js, JWT)
-- Chat interface with threads and message history
-- Markdown and code block rendering
-- Search and create chat threads
-- User settings page
-- Responsive sidebar navigation
-- Integration with backend AI APIs
+## ✨ Features
+- **Azure AD Secure authentication** (NextAuth.js, JWT)
+- **Advanced Chat Interface** with threads and message history
+- **Message Regeneration & Version Control** - Regenerate AI responses and navigate versions
+- **Markdown and code block rendering** with syntax highlighting
+- **Search and create chat threads** with intelligent filtering
+- **User settings page** with customizable preferences
+- **Responsive sidebar navigation** with modern design
+- **Integration with multiple AI services** (Azure OpenAI, Gemini, HuggingFace)
+- **Model Context Protocol (MCP)** support for advanced tool integration
 
-## Folder Structure
+## 📚 Documentation
+
+For detailed feature guides and setup instructions, visit our **[Documentation Hub](../docs/README.md)**:
+
+- **[AI Model Setup](../docs/MODEL_SETUP.md)** - Configure all supported AI models
+- **[Message Regeneration Features](../docs/MESSAGE_REGENERATION_FEATURE.md)** - Advanced chat capabilities
+- **[Main Project README](../README.md)** - Complete project overview
+
+## 🏗️ Folder Structure
 ```
 client/
   src/
@@ -28,16 +38,16 @@ client/
     types/                  # TypeScript types and declarations
 ```
 
-## Setup & Installation
+## 🚀 Setup & Installation
 1. **Install dependencies:**
    ```bash
    cd client
    npm install
    ```
 2. **Configure environment variables:**
-   If required, create a `.env.local` file for NextAuth or API URLs (see backend docs for details).
+   Create a `.env.local` file for NextAuth and API configuration (see [AI Model Setup](../docs/MODEL_SETUP.md) for details).
 
-## Running the Client
+## 🖥️ Running the Client
 - **Development:**
   ```bash
   npm run dev
@@ -48,13 +58,13 @@ client/
   npm start
   ```
 
-## Scripts
+## 📦 Scripts
 - `npm run dev` — Start development server (with Turbopack)
 - `npm run build` — Build for production
 - `npm start` — Start production server
 - `npm run lint` — Lint codebase
 
-## Main Routes
+## 🛣️ Main Routes
 | Path                        | Description                       |
 |-----------------------------|-----------------------------------|
 | `/`                         | Landing page                      |
@@ -62,19 +72,43 @@ client/
 | `/chat/[id]`                | Individual chat thread            |
 | `/unauthorized`             | Unauthorized access page          |
 
-## Key Components
-- `ChatContainer`, `ChatList`, `ChatMessage` — Chat UI
-- `SideBar` — Navigation sidebar
-- `NewChat`, `SearchChat` — Chat thread actions
-- `MarkdownCodeBlock` — Markdown/code rendering
+## 🧩 Key Components
+- **`ChatContainer`** — Main chat interface with message regeneration
+- **`ChatList`** — Chat thread management and navigation
+- **`ChatMessage`** — Individual message display with version controls
+- **`SideBar`** — Navigation sidebar with search and settings
+- **`NewChat`** — Chat thread creation and management
+- **`SearchChat`** — Intelligent chat thread search
+- **`MarkdownCodeBlock`** — Enhanced markdown and code rendering
 
-## Tech Stack
-- Next.js 15, React 19, TypeScript
-- NextAuth.js for authentication
-- Tailwind CSS for styling
-- MongoDB (via backend)
+## 🎯 New Features
 
-## License
+### Message Regeneration & Version Control
+- **Regenerate Button**: Regenerate AI responses with the same context
+- **Version Navigation**: Browse between different AI response versions
+- **Version Indicator**: Shows current version and total count
+- **Persistent Storage**: All versions are saved and accessible
+
+### Enhanced UI/UX
+- **Responsive Design**: Works seamlessly on all devices
+- **Modern Components**: Built with latest React patterns
+- **Accessibility**: WCAG compliant interface elements
+- **Performance**: Optimized rendering and state management
+
+## 🛠️ Tech Stack
+- **Framework**: Next.js 15, React 19, TypeScript
+- **Authentication**: NextAuth.js with JWT
+- **Styling**: Tailwind CSS with custom components
+- **State Management**: React Context + Hooks
+- **Database**: MongoDB integration via backend
+- **AI Services**: Multi-model support through backend APIs
+
+## 📖 Additional Resources
+- **[Server Documentation](../server/README.md)** - Backend API guide
+- **[Project Overview](../README.md)** - Complete project information
+- **[Feature Documentation](../docs/README.md)** - Detailed guides for all features
+
+## �� License
 MIT
 
 ---

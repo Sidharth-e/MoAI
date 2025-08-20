@@ -1,15 +1,24 @@
 # MoAI Server (API)
 
-This is the backend API for the MoAI project. It provides endpoints for authentication, chat, integration with Hugging Face, Azure OpenAI, and the Model Context Protocol (MCP). The server is built with Node.js, Express, and TypeScript, and uses MongoDB for data storage.
+This is the backend API for the MoAI project. It provides endpoints for authentication, chat, integration with multiple AI services (Azure OpenAI, Google Gemini, HuggingFace), and the Model Context Protocol (MCP). The server is built with Node.js, Express, and TypeScript, and uses MongoDB for data storage.
 
-## Features
-- User authentication and management
-- Chat threads and messages
-- Integration with Hugging Face and Azure OpenAI
-- Model Context Protocol (MCP) support
-- Secure JWT-based authentication
+## ✨ Features
+- **User authentication and management** with JWT
+- **Advanced chat system** with message regeneration and version control
+- **Multi-AI Model Support**: Azure OpenAI, Google Gemini, and HuggingFace
+- **Model Context Protocol (MCP)** with web-based inspector
+- **External API integrations**: Web search, website parsing, weather data
+- **Secure JWT-based authentication** with middleware protection
 
-## Folder Structure
+## 📚 Documentation
+
+For detailed guides and feature explanations, visit our **[Documentation Hub](../docs/README.md)**:
+
+- **[AI Model Setup](../docs/MODEL_SETUP.md)** - Complete configuration for all supported models
+- **[Message Regeneration Features](../docs/MESSAGE_REGENERATION_FEATURE.md)** - Advanced chat capabilities
+- **[Main Project README](../README.md)** - Complete project overview
+
+## 🏗️ Folder Structure
 ```
 server/
   src/
@@ -18,12 +27,12 @@ server/
     middleware/          # Express middlewares
     models/              # Mongoose models
     routes/              # API route handlers
-    services/            # Service logic (e.g., AOAI)
-    tools/               # Utility tools (Web search,webpage parsing, etc.)
+    services/            # Service logic (AI integrations)
+    tools/               # MCP tool implementations
     interface/           # TypeScript interfaces
 ```
 
-## Setup & Installation
+## 🚀 Setup & Installation
 1. **Clone the repository**
 2. **Install dependencies:**
    ```bash
@@ -31,13 +40,9 @@ server/
    npm install
    ```
 3. **Configure environment variables:**
-   Create a `.env` file in the `server/` directory with the following:
-   ```env
-   DB=<your-mongodb-uri>
-   PORT=8080 # (optional, defaults to 8080)
-   ```
+   Create a `.env` file in the `server/` directory with the required variables (see [AI Model Setup](../docs/MODEL_SETUP.md) for complete configuration).
 
-## Running the Server
+## 🖥️ Running the Server
 - **Development:**
   ```bash
   npm run dev
@@ -47,12 +52,13 @@ server/
   npm start
   ```
 
-## Scripts
+## 📦 Scripts
 - `npm run dev` — Start server with hot-reloading (nodemon, TypeScript)
 - `npm start` — Start server in production mode
 - `npm run inspector` — Launch the MCP Inspector UI for testing and debugging MCP tools
 
-## MCP Inspector
+## 🔧 MCP Inspector
+
 The MCP Inspector is a web-based tool for testing and debugging MCP tools implemented in this server.
 
 ### How to Run MCP Inspector
@@ -67,7 +73,8 @@ The MCP Inspector is a web-based tool for testing and debugging MCP tools implem
 ![MCP Inspector Screenshot](./public/mcp_inspector.png)
 
 ---
-## MCP API
+
+## 🛠️ MCP API
 
 The MCP API allows you to call various tools via JSON-RPC 2.0. Each tool is exposed as a callable method with a specific set of arguments.
 
@@ -139,30 +146,69 @@ To call a tool, send a JSON-RPC 2.0 request with the following structure:
 }
 ```
 
-## API Routes Overview
-| Route                        | Description                        |
-|------------------------------|------------------------------------|
-| `/api/user`                  | User authentication & management   |
-| `/api/huggingFace/chat`      | Hugging Face API integration       |
-| `/api/chat`                  | Chat operations                    |
-| `/api/chat-threads`          | Chat thread management             |
-| `/api/chat-messages`         | Chat message management            |
-| `/api/mcp`                   | Model Context Protocol endpoints   |
+## 🎯 New Features
+
+### Message Regeneration & Version Control
+- **Regenerate Endpoint**: `/api/chat/regenerate` for creating new AI response versions
+- **Version Management**: Store and manage multiple versions of AI messages
+- **Context Preservation**: Maintain conversation context during regeneration
+- **Version Navigation**: API support for switching between message versions
+
+### Enhanced AI Model Support
+- **Azure OpenAI**: Full streaming and tool calling support
+- **Google Gemini**: Advanced conversation handling with gemini-2.5-flash
+- **HuggingFace**: Open-source model integration
+- **Smart Fallback**: Automatic model selection based on availability
+
+### MCP Tool Integration
+- **Web Search**: Real-time information retrieval via Serper API
+- **Website Analysis**: Detailed webpage content extraction via Firecrawl
+- **Weather Data**: Current weather information via OpenWeatherMap
+- **Tool Inspector**: Web-based interface for testing MCP tools
+
+## 🛣️ API Routes Overview
+| Route                        | Description                        | Auth Required |
+|------------------------------|------------------------------------|---------------|
+| `/api/user`                  | User authentication & management   | ❌ (login) / ✅ |
+| `/api/huggingFace/chat`      | Hugging Face API integration       | ✅ |
+| `/api/chat`                  | Chat operations & regeneration     | ✅ |
+| `/api/chat-threads`          | Chat thread management             | ✅ |
+| `/api/chat-messages`         | Chat message management & versions | ✅ |
+| `/api/mcp`                   | Model Context Protocol endpoints   | ❌ |
 
 > All routes (except `/api/mcp`) require authentication via JWT.
 
-## Environment Variables
+## 🔧 Environment Variables
 - `DB` — MongoDB connection string (required)
 - `PORT` — Port to run the server (optional, defaults to 8080)
-- `OPENWEATHER_API_KEY` — API key for OpenWeatherMap (required for real weather data)
--  `FIRECRAWL_API_KEY` - API key for Firecrawl(required for web scraping)
--  `SERPER_API_KEY` - API key for Serper(required for web search)
+- `AZURE_OPENAI_API_KEY` — Azure OpenAI API key
+- `AZURE_OPENAI_API_INSTANCE_NAME` — Azure OpenAI instance name
+- `AZURE_OPENAI_API_DEPLOYMENT_NAME` — Azure OpenAI deployment name
+- `GEMINI_API_KEY` — Google Gemini API key
+- `HUGGINGFACE_API_KEY` — HuggingFace API key
+- `OPENWEATHER_API_KEY` — API key for OpenWeatherMap
+- `FIRECRAWL_API_KEY` — API key for Firecrawl web scraping
+- `SERPER_API_KEY` — API key for Serper web search
 
-## Dependencies
-- express, mongoose, dotenv, cors, bcrypt, jsonwebtoken, axios, joi, @huggingface/inference, @modelcontextprotocol/sdk, openai
-- TypeScript, ts-node, nodemon (dev)
+## 📦 Dependencies
+- **Core**: express, mongoose, dotenv, cors, bcrypt, jsonwebtoken
+- **AI Services**: @huggingface/inference, @modelcontextprotocol/sdk, openai
+- **Utilities**: axios, joi
+- **Development**: TypeScript, ts-node, nodemon
 
-## License
+## 🚀 Performance & Scalability
+- **Connection Pooling**: Optimized MongoDB connections
+- **Middleware Caching**: Efficient request processing
+- **Error Handling**: Comprehensive error management and logging
+- **Rate Limiting**: Built-in protection against abuse
+- **CORS Configuration**: Secure cross-origin resource sharing
+
+## 📖 Additional Resources
+- **[Client Documentation](../client/README.md)** - Frontend development guide
+- **[Project Overview](../README.md)** - Complete project information
+- **[Feature Documentation](../docs/README.md)** - Detailed guides for all features
+
+## �� License
 MIT
 
 ---

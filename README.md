@@ -1,9 +1,25 @@
-# 🤖 MoAI
+# 🤖 MoAI - Modern AI Chat Platform
 
 ![MoAI Screenshot](client/public/home.png)
 ![MoAI Screenshot](client/public/chat.png)
 
-MoAI is a full-stack, modern AI chat platform featuring a Next.js frontend and a Node.js/Express backend. It offers real-time chat, user authentication, and seamless integration with external APIs and AI services.
+MoAI is a full-stack, modern AI chat platform featuring a Next.js frontend and a Node.js/Express backend. It offers real-time chat, user authentication, and seamless integration with multiple AI services including Azure OpenAI, Google Gemini, and HuggingFace models.
+
+---
+
+## 🆕 What's New
+
+### ✨ Latest Features
+- **🔄 Message Regeneration & Version Control** - Regenerate AI responses and navigate between different versions
+- **🧠 Multi-Model AI Support** - Azure OpenAI, Google Gemini, and HuggingFace integration
+- **🔧 Model Context Protocol (MCP)** - Advanced AI tool integration and calling
+- **🌐 Enhanced Web Tools** - Web search, website parsing, and weather data
+- **📱 Modern UI/UX** - Responsive design with advanced chat features
+
+### 📚 Documentation
+- **New docs folder** with detailed guides for all features
+- **AI Model Setup Guide** - Complete configuration for all supported models
+- **Feature Documentation** - In-depth explanations of advanced capabilities
 
 ---
 
@@ -11,31 +27,55 @@ MoAI is a full-stack, modern AI chat platform featuring a Next.js frontend and a
 
 ```
 MoAI/
-  client/   # Next.js frontend (React, TypeScript)
-  server/   # Node.js/Express backend (TypeScript, MongoDB)
+  ├── 📁 client/          # Next.js frontend (React, TypeScript)
+  ├── 📁 server/          # Node.js/Express backend (TypeScript, MongoDB)
+  └── 📁 docs/            # Comprehensive documentation
 ```
 
 - **client/**: Frontend web app (Next.js, React, Tailwind CSS, NextAuth.js)
-- **server/**: Backend API (Express, MongoDB, JWT, HuggingFace, OpenAI, MCP)
+- **server/**: Backend API (Express, MongoDB, JWT, Multi-AI Services, MCP)
+- **docs/**: Detailed documentation and guides
 
 ---
 
-## ✨ Features
+## ✨ Core Features
 
-- 🔐 **User Authentication** (NextAuth.js, JWT)
-- 💬 **Real-time Chat Interface**
-- 🧵 **Chat Threads & History**
-- 🧠 **AI Integrations**: HuggingFace, Azure OpenAI, Model Context Protocol (MCP)
-- 🌐 **Web & Weather API Tools**
-- ⚙️ **User Settings & Profile Management**
-- 🖥️ **Modern, Responsive UI**
+### 🔐 Authentication & Security
+- **NextAuth.js Integration** - Secure user authentication
+- **JWT Token Management** - Stateless authentication
+- **Protected Routes** - Secure access to chat features
+
+### 💬 Advanced Chat System
+- **Real-time Chat Interface** - Modern, responsive chat UI
+- **Chat Threads & History** - Organized conversation management
+- **Message Regeneration** - Regenerate AI responses with version control
+- **Version Navigation** - Browse different AI response versions
+- **Markdown Support** - Rich text and code block rendering
+
+### 🧠 Multi-AI Model Support
+- **Azure OpenAI** - Enterprise-grade AI with full streaming and tool calling
+- **Google Gemini** - Advanced conversation handling with gemini-2.5-flash
+- **HuggingFace** - Open-source AI models for experimentation
+- **Model Context Protocol (MCP)** - Advanced AI tool integration
+
+### 🌐 External API Tools
+- **Web Search** - Serper API integration for real-time web data
+- **Website Parsing** - Firecrawl for detailed webpage analysis
+- **Weather Data** - OpenWeatherMap integration
+- **MCP Inspector** - Web-based tool for testing and debugging MCP tools
+
+### ⚙️ User Experience
+- **Responsive Design** - Works on all devices
+- **Dark/Light Theme** - Customizable appearance
+- **User Settings** - Profile and preference management
+- **Search & Navigation** - Easy chat thread discovery
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js (v16+ recommended)
+- Node.js (v18+ recommended)
 - npm or yarn
 - MongoDB instance (local or cloud)
 
@@ -46,162 +86,271 @@ MoAI/
    git clone <repo-url>
    cd MoAI
    ```
-2. **Install dependencies for both client and server:**
+
+2. **Install dependencies:**
    ```bash
+   # Install client dependencies
    cd client && npm install
+   
+   # Install server dependencies
    cd ../server && npm install
    ```
-3. **Set up environment variables:**
-   - Copy `.env.example` to `.env` in both `client/` and `server/` directories and fill in the required values.
-4. **Run the development servers:**
-   - **Client:**
-     ```bash
-     cd client
-     npm run dev
-     ```
-   - **Server:**
-     ```bash
-     cd server
-     npm run dev
-     ```
+
+3. **Environment Setup:**
+   - Copy `.env.example` to `.env` in both `client/` and `server/` directories
+   - Configure your AI model API keys (see [AI Model Setup](docs/MODEL_SETUP.md))
+
+4. **Start Development Servers:**
+   ```bash
+   # Terminal 1 - Start client
+   cd client
+   npm run dev
+   
+   # Terminal 2 - Start server
+   cd server
+   npm run dev
+   ```
+
+5. **Access the Application:**
+   - Frontend: http://localhost:3000
+   - Backend: http://localhost:8080
+   - MCP Inspector: http://localhost:8081 (when running `npm run inspector`)
 
 ---
 
-## 🏗️ Folder Structure
+## 📖 Documentation
 
-### Client (`client/`)
+For detailed guides and feature explanations, visit our **[Documentation Hub](docs/README.md)**:
+
+- **[AI Model Setup](docs/MODEL_SETUP.md)** - Configure Azure OpenAI, Gemini, and HuggingFace
+- **[Message Regeneration Features](docs/MESSAGE_REGENERATION_FEATURE.md)** - Advanced chat capabilities
+- **[Client Documentation](client/README.md)** - Frontend development guide
+- **[Server Documentation](server/README.md)** - Backend API guide
+
+---
+
+## 🏗️ Architecture Overview
+
+### Frontend (`client/`)
 ```
 client/
   src/
     app/
-      (authenticated)/      # Protected routes (chat, home, etc.)
-      layout.tsx            # Root layout
+      (authenticated)/      # Protected routes (chat, settings, etc.)
+      layout.tsx            # Root layout with providers
       page.tsx              # Landing page
-      globals.css           # Global styles
-    components/             # UI components (Chat, Sidebar, etc.)
+    components/             # Reusable UI components
     contexts/               # React context providers
-    features/               # Feature modules (auth, navigation, etc.)
-    lib/                    # Utility libraries (JWT, MongoDB, etc.)
+    features/               # Feature modules
+    lib/                    # Utility libraries
     services/               # API service functions
-    types/                  # TypeScript types and declarations
-  public/                   # Static assets (SVGs, screenshot, etc.)
+    types/                  # TypeScript definitions
 ```
 
-### Server (`server/`)
+### Backend (`server/`)
 ```
 server/
   src/
-    db.ts                # MongoDB connection
-    index.ts             # Entry point
-    middleware/          # Express middlewares
-    models/              # Mongoose models
-    routes/              # API route handlers
-    services/            # Service logic (e.g., AOAI)
-    tools/               # Utility tools (web, weather, etc.)
-    interface/           # TypeScript interfaces
+    db.ts                  # MongoDB connection
+    index.ts               # Express server entry point
+    middleware/            # Authentication & validation
+    models/                # Mongoose schemas
+    routes/                # API endpoints
+    services/              # AI service integrations
+    tools/                 # MCP tool implementations
+    interface/             # TypeScript interfaces
 ```
 
 ---
 
-## 🖥️ Main UI Routes
-| Path            | Description                       |
-|-----------------|-----------------------------------|
-| `/`             | Landing page                      |
-| `/chat`         | Chat interface (authenticated)    |
-| `/chat/[id]`    | Individual chat thread            |
-| `/unauthorized` | Unauthorized access page          |
+## 🛠️ API Endpoints
+
+| Route | Method | Description | Auth Required |
+|-------|--------|-------------|---------------|
+| `/api/user` | POST/GET | User authentication & management | ❌ (login) / ✅ |
+| `/api/chat` | POST/GET | Chat operations & regeneration | ✅ |
+| `/api/chat-threads` | GET/POST | Thread management | ✅ |
+| `/api/chat-messages` | GET/PATCH | Message operations & version control | ✅ |
+| `/api/huggingFace/chat` | POST | HuggingFace AI integration | ✅ |
+| `/api/mcp` | POST | Model Context Protocol tools | ❌ |
 
 ---
 
-## 🛠️ API Overview
-| Route                        | Description                        |
-|------------------------------|------------------------------------|
-| `/api/user`                  | User authentication & management   |
-| `/api/huggingFace/chat`      | Hugging Face API integration       |
-| `/api/chat`                  | Chat operations                    |
-| `/api/chat-threads`          | Chat thread management             |
-| `/api/chat-messages`         | Chat message management            |
-| `/api/mcp`                   | Model Context Protocol (MCP) API   |
+## 🔧 Environment Variables
 
-> All routes (except `/api/mcp`) require authentication via JWT.
+### Client Environment
+```env
+# NextAuth Configuration
+NEXTAUTH_SECRET=your-secret-here
+NEXTAUTH_URL=http://localhost:3000
 
----
+# API Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8080
+```
 
-## 🧩 Key Components & Tech
-- **Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS, NextAuth.js
-- **Backend:** Node.js, Express, MongoDB, Mongoose, JWT, HuggingFace(Open Source model), OpenAI, MCP
-- **Integrations:**
-  - 🔗 HuggingFace (AI Inference)
-  - 🔗 Azure OpenAI
-  - 🔗 Model Context Protocol (MCP)
-  - 🌦️ OpenWeatherMap (weather)
-  - 🌐 Serper (web search)
-- **UI Components:**
-  - `ChatContainer`, `ChatList`, `ChatMessage` — Chat UI
-  - `SideBar` — Navigation sidebar
-  - `NewChat` — Chat thread actions
-  - `MarkdownCodeBlock` — Markdown/code rendering
+### Server Environment
+```env
+# Database
+DB=mongodb://localhost:27017/moai
 
----
+# Server
+PORT=8080
 
-## ⚙️ Environment Variables
-- **Client:** See `.env.example` in `client/` for NextAuth, API URLs, etc.
-- **Server:** See `.env.example` in `server/` for MongoDB, API keys, etc.
-  - `DB` — MongoDB connection string (required)
-  - `PORT` — Port to run the server (optional, defaults to 8080)
-  - `OPENWEATHER_API_KEY` — API key for OpenWeatherMap
-  - `SERPER_API_KEY` — API key for Serper web search
-  - `FIRECRAWL_API_KEY` — API key for Firecrawl web scraping
+# AI Services
+AZURE_OPENAI_API_KEY=your-key
+AZURE_OPENAI_API_INSTANCE_NAME=your-instance
+AZURE_OPENAI_API_DEPLOYMENT_NAME=your-deployment
+
+GEMINI_API_KEY=your-key
+HUGGINGFACE_API_KEY=your-key
+
+# External APIs
+OPENWEATHER_API_KEY=your-key
+SERPER_API_KEY=your-key
+FIRECRAWL_API_KEY=your-key
+```
 
 ---
 
-## 📦 Scripts
-- **Client:**
-  - `npm run dev` — Start development server
-  - `npm run build` — Build for production
-  - `npm start` — Start production server
-  - `npm run lint` — Lint codebase
-- **Server:**
-  - `npm run dev` — Start server with hot-reloading
-  - `npm start` — Start server in production mode
+## 📦 Available Scripts
+
+### Client
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm start        # Start production server
+npm run lint     # Lint codebase
+```
+
+### Server
+```bash
+npm run dev          # Start with hot-reloading
+npm start            # Start production server
+npm run inspector    # Launch MCP Inspector UI
+```
+
+---
+
+## 🧩 Technology Stack
+
+### Frontend
+- **Framework**: Next.js 15, React 19
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Authentication**: NextAuth.js
+- **State Management**: React Context + Hooks
+
+### Backend
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Language**: TypeScript
+- **Database**: MongoDB with Mongoose
+- **Authentication**: JWT
+
+### AI & External Services
+- **Azure OpenAI**: GPT-4, GPT-3.5-turbo
+- **Google Gemini**: gemini-2.5-flash
+- **HuggingFace**: Open-source models
+- **MCP**: Model Context Protocol
+- **APIs**: Serper (web search), Firecrawl (web scraping), OpenWeatherMap
+
+---
+
+## 🎯 Key Features Deep Dive
+
+### Message Regeneration & Version Control
+- **Regenerate AI Responses**: Create new versions of AI messages
+- **Version Navigation**: Browse between different AI response versions
+- **Persistent Storage**: All versions are saved and accessible
+- **Smart Context**: Regeneration uses the same conversation context
+
+### Model Context Protocol (MCP)
+- **Tool Integration**: Seamlessly call external tools from AI conversations
+- **Web Search**: Real-time information retrieval
+- **Website Analysis**: Detailed webpage content extraction
+- **Weather Data**: Current weather information
+- **Inspector UI**: Web-based tool testing interface
+
+### Multi-Model AI Support
+- **Azure OpenAI**: Production-ready with full streaming and tool calling
+- **Google Gemini**: Advanced conversation handling
+- **HuggingFace**: Open-source experimentation
+- **Automatic Fallback**: Smart model selection based on availability
+
+---
+
+## 🚀 Deployment
+
+### Production Build
+```bash
+# Build client
+cd client
+npm run build
+
+# Start server
+cd ../server
+npm start
+```
+
+### Environment Considerations
+- Set production environment variables
+- Configure MongoDB connection for production
+- Set up proper CORS settings
+- Configure NextAuth for production domain
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our contributing guidelines:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Commit your changes**: `git commit -m 'Add amazing feature'`
+4. **Push to the branch**: `git push origin feature/amazing-feature`
+5. **Open a Pull Request**
+
+### Development Guidelines
+- Follow TypeScript best practices
+- Maintain consistent code formatting
+- Add tests for new features
+- Update documentation for changes
 
 ---
 
 ## 📄 License
-MIT
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 Credits
+## 🙏 Acknowledgments
 
-### 🛠️ Technologies & Libraries
-- **Frontend Framework**: [Next.js](https://nextjs.org/) - React framework for production
-- **UI Framework**: [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- **Authentication**: [NextAuth.js](https://next-auth.js.org/) - Complete authentication solution
-- **Backend Framework**: [Express.js](https://expressjs.com/) - Fast, unopinionated web framework
-- **Database**: [MongoDB](https://www.mongodb.com/) - NoSQL database
-- **AI Services**: 
-  - [Hugging Face](https://huggingface.co/) - Open source AI models
-  - [Azure OpenAI](https://azure.microsoft.com/en-us/products/ai-services/openai-service) - Enterprise AI services
-  - [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) - AI model integration protocol
+### 🛠️ Core Technologies
+- [Next.js](https://nextjs.org/) - React framework for production
+- [Express.js](https://expressjs.com/) - Fast, unopinionated web framework
+- [MongoDB](https://www.mongodb.com/) - NoSQL database
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
 
-### 🎨 UI Components & Design
-- **Chat UI Skeleton**: [Langui.dev Components](https://www.langui.dev/components) - Modern chat interface components and design patterns
-- Icons provided by [Lucide React](https://lucide.dev/) - Beautiful & consistent icon toolkit
-- UI components inspired by modern design systems
+### 🧠 AI Services
+- [Azure OpenAI](https://azure.microsoft.com/en-us/products/ai-services/openai-service) - Enterprise AI services
+- [Google Gemini](https://ai.google.dev/) - Advanced AI models
+- [Hugging Face](https://huggingface.co/) - Open source AI models
+- [Model Context Protocol](https://modelcontextprotocol.io/) - AI integration standard
 
-### 📚 Learning Resources
-- Next.js documentation and examples
-- React patterns and best practices
-- MongoDB and Express.js tutorials
+### 🎨 UI & Design
+- [Lucide React](https://lucide.dev/) - Beautiful icon toolkit
+- Modern design patterns and best practices
 
 ---
 
-## 🙌 Contributing
-Pull requests and issues are welcome! For major changes, please open an issue first to discuss what you would like to change.
+## 📞 Support & Community
+
+- **Issues**: Report bugs and request features via GitHub Issues
+- **Discussions**: Join community discussions
+- **Documentation**: Check our [docs folder](docs/README.md) for detailed guides
 
 ---
 
-## 💡 Tips
-- For more details, see the source code in each folder and the sub-READMEs in `client/` and `server/`.
+*Built with ❤️ using modern web technologies*
 
