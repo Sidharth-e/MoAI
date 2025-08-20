@@ -13,6 +13,17 @@ const chatThreadSchema = new Schema<IChatThread>({
   },
 });
 
+// Add toJSON transformation to convert ObjectId to string
+chatThreadSchema.set('toJSON', {
+  transform: function(doc, ret) {
+    ret._id = ret._id.toString();
+    if (ret.userId) {
+      ret.userId = ret.userId.toString();
+    }
+    return ret;
+  }
+});
+
 // ChatThread Model
 const ChatThread = mongoose.model<IChatThread>("ChatThread", chatThreadSchema);
 

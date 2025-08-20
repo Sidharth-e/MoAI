@@ -15,7 +15,7 @@ import {
 import { useChatThreads } from "@/contexts/ChatThreadsContext";
 
 type Message = { 
-  _id?: string;
+  _id: string;
   role: "user" | "assistant"; 
   content: string;
   versions?: string[];
@@ -25,13 +25,17 @@ type Message = {
 const ERROR_MSG = "[Error receiving response]";
 const ERROR_HISTORY_MSG = "[Error loading history]";
 
-const mapMessage = (m: any): Message => ({
-  _id: m._id,
-  role: m.sender === "user" ? "user" : "assistant",
-  content: m.text,
-  versions: m.versions || [m.text],
-  activeVersionIndex: m.activeVersionIndex || 0,
-});
+const mapMessage = (m: any): Message => {
+  console.log('Mapping message:', m);
+  console.log('Message _id:', m._id, 'Type:', typeof m._id);
+  return {
+    _id: m._id ? String(m._id) : `fallback-${Date.now()}`,
+    role: m.sender === "user" ? "user" : "assistant",
+    content: m.text,
+    versions: m.versions || [m.text],
+    activeVersionIndex: m.activeVersionIndex || 0,
+  };
+};
 
 const scrollToBottom = (ref: React.RefObject<HTMLDivElement | null>) => {
   if (ref.current) {
@@ -121,7 +125,7 @@ const ChatContainer: React.FC = () => {
 
   const fetchAndStreamResponse = async (prompt: string) => {
     setStreaming(true);
-    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+    setMessages((prev) => [...prev, { _id: `temp-${Date.now()}`, role: "assistant", content: "" }]);
     try {
       assistantMessage = await streamAssistantResponse({
         prompt,
@@ -139,7 +143,7 @@ const ChatContainer: React.FC = () => {
         onError: () => {
           setMessages((prev) => [
             ...prev.slice(0, -1),
-            { role: "assistant", content: ERROR_MSG },
+            { _id: `error-${Date.now()}`, role: "assistant", content: ERROR_MSG },
           ]);
         },
       });
@@ -179,7 +183,7 @@ const ChatContainer: React.FC = () => {
     if (!input.trim() || streaming) return;
     const prompt = input;
     setInput("");
-    setMessages((msgs) => [...msgs, { role: "user", content: prompt }]);
+    setMessages((msgs) => [...msgs, { _id: `temp-user-${Date.now()}`, role: "user", content: prompt }]);
 
     try {
       await createChatMessage(String(id), jwtToken!, {
@@ -208,7 +212,7 @@ const ChatContainer: React.FC = () => {
       } catch (e) {
         if (!cancelled) {
           console.error(e);
-            setMessages([{ role: "assistant", content: ERROR_HISTORY_MSG }]);
+            setMessages([{ _id: `error-history-${Date.now()}`, role: "assistant", content: ERROR_HISTORY_MSG }]);
         }
       }
     };
@@ -249,7 +253,8 @@ const ChatContainer: React.FC = () => {
       className="h-full w-full overflow-y-auto bg-slate-200 text-sm leading-6 text-slate-900 dark:bg-slate-800 dark:text-slate-300 sm:text-base sm:leading-7 flex flex-col"
     >
       <div className="flex-1 px-4 pt-4 space-y-2 py-10">
-        {messages.map((msg, i) => (
+        {messages.map((msg, i) => 
+        (
           <ChatMessage 
             key={i} 
             role={msg.role} 

@@ -25,6 +25,15 @@ const chatMessageSchema = new Schema<IChatMessage>({
   },
 });
 
+// Add toJSON transformation to convert ObjectId to string
+chatMessageSchema.set('toJSON', {
+  transform: function(doc, ret) {
+    ret._id = ret._id.toString();
+    ret.threadId = ret.threadId.toString();
+    return ret;
+  }
+});
+
 // ChatMessage Model
 const ChatMessage = mongoose.model<IChatMessage>("ChatMessage", chatMessageSchema);
 

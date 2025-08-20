@@ -11,7 +11,7 @@ export interface CreateChatThreadResponse {
 }
 
 export interface ChatMessageDTO {
-  _id?: string;
+  _id: string;
   text: string;
   sender: "user" | "assistant";
   createdAt?: string;
