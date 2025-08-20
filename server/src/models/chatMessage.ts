@@ -8,6 +8,17 @@ const chatMessageSchema = new Schema<IChatMessage>({
   threadId: { type: mongoose.Schema.Types.ObjectId, ref: "ChatThread", required: true },
   sender: { type: String, enum: ["user", "assistant","tool"], required: true },
   text: { type: String, required: true },
+  versions: { 
+    type: [String], 
+    default: function(this: any) {
+      // Initialize versions array with the current text
+      return [this.text];
+    }
+  },
+  activeVersionIndex: { 
+    type: Number, 
+    default: 0 
+  },
   createdAt: {
     type: Date,
     default: Date.now,

@@ -3,12 +3,17 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import MarkdownCodeBlock from "./MarkdownCodeBlock";
-import { Copy, Check, ThumbsDown, ThumbsUp, RefreshCcw } from "lucide-react"; // <-- import Check here
+import { Copy, Check, ThumbsDown, ThumbsUp, RefreshCcw, ChevronLeft, ChevronRight } from "lucide-react";
 
 type ChatMessageProps = {
   role: "user" | "assistant";
   content: string;
   agentName?: string;
+  messageId?: string;
+  versions?: string[];
+  activeVersionIndex?: number;
+  onRegenerate?: (messageId: string) => Promise<void>;
+  onVersionNavigation?: (messageId: string, direction: 'prev' | 'next') => void;
 };
 
 const avatarUrl = {
@@ -16,15 +21,45 @@ const avatarUrl = {
   assistant: "https://dummyimage.com/256x256/354ea1/ffffff&text=G",
 };
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, agentName }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ 
+  role, 
+  content, 
+  agentName, 
+  messageId, 
+  versions, 
+  activeVersionIndex, 
+  onRegenerate, 
+  onVersionNavigation 
+}) => {
   const isAssistant = role === "assistant";
-  const [copied, setCopied] = useState(false); // <-- state for copied
+  const [copied, setCopied] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(content);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500); // 1.5s timeout
   };
+
+  const handleRegenerate = async () => {
+    if (!messageId || !onRegenerate) return;
+    
+    setIsRegenerating(true);
+    try {
+      await onRegenerate(messageId);
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  const handleVersionNavigation = async (direction: 'prev' | 'next') => {
+    if (!messageId || !onVersionNavigation) return;
+    await onVersionNavigation(messageId, direction);
+  };
+
+  const hasMultipleVersions = versions && versions.length > 1;
+  const canGoPrev = hasMultipleVersions && (activeVersionIndex || 0) > 0;
+  const canGoNext = hasMultipleVersions && (activeVersionIndex || 0) < (versions?.length || 1) - 1;
 
   return (
     <div
@@ -71,9 +106,46 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ role, content, agentName }) =
             <button className="hover:text-blue-600" title="Dislike">
               <ThumbsDown size={18} />
             </button>
-            <button className="hover:text-blue-600" title="Regenerate">
+
+            {/* Regenerate */}
+            <button 
+              onClick={handleRegenerate}
+              disabled={isRegenerating || !messageId}
+              className={`hover:text-blue-600 transition-colors ${isRegenerating ? 'animate-spin' : ''}`}
+              title="Regenerate message"
+            >
               <RefreshCcw size={18} />
             </button>
+
+            {/* Version Navigation Controls - Only show if multiple versions exist */}
+            {hasMultipleVersions && (
+              <div className="flex items-center gap-1 border-l border-slate-300 pl-2 ml-2">
+                {/* Previous Version */}
+                <button
+                  onClick={() => handleVersionNavigation('prev')}
+                  disabled={!canGoPrev}
+                  className={`hover:text-blue-600 transition-colors ${!canGoPrev ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Previous version"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+
+                {/* Version Indicator */}
+                <span className="text-xs px-2 text-slate-600">
+                  {(activeVersionIndex || 0) + 1}/{versions?.length || 1}
+                </span>
+
+                {/* Next Version */}
+                <button
+                  onClick={() => handleVersionNavigation('next')}
+                  disabled={!canGoNext}
+                  className={`hover:text-blue-600 transition-colors ${!canGoNext ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Next version"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

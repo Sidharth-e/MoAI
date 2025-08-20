@@ -9,17 +9,28 @@ import {
   fetchChatMessages,
   updateChatThreadTitle,
   streamAssistantResponse,
+  regenerateMessage,
+  updateMessageVersion,
 } from "@/services/chat-services";
 import { useChatThreads } from "@/contexts/ChatThreadsContext";
 
-type Message = { role: "user" | "assistant"; content: string };
+type Message = { 
+  _id?: string;
+  role: "user" | "assistant"; 
+  content: string;
+  versions?: string[];
+  activeVersionIndex?: number;
+};
 
 const ERROR_MSG = "[Error receiving response]";
 const ERROR_HISTORY_MSG = "[Error loading history]";
 
 const mapMessage = (m: any): Message => ({
+  _id: m._id,
   role: m.sender === "user" ? "user" : "assistant",
   content: m.text,
+  versions: m.versions || [m.text],
+  activeVersionIndex: m.activeVersionIndex || 0,
 });
 
 const scrollToBottom = (ref: React.RefObject<HTMLDivElement | null>) => {
@@ -41,6 +52,72 @@ const ChatContainer: React.FC = () => {
   const titleUpdatedRef = useRef(false);
   const maxLength = 10000;
   let assistantMessage = "";
+
+  // Function to handle message regeneration
+  const handleRegenerateMessage = async (messageId: string) => {
+    if (!jwtToken || !id) return;
+    
+    try {
+      const regeneratedMessage = await regenerateMessage(messageId, String(id), jwtToken);
+      
+      setMessages(prev => prev.map(msg => 
+        msg._id === messageId 
+          ? {
+              ...msg,
+              content: regeneratedMessage.text,
+              versions: regeneratedMessage.versions || [regeneratedMessage.text],
+              activeVersionIndex: regeneratedMessage.activeVersionIndex || 0
+            }
+          : msg
+      ));
+    } catch (error) {
+      console.error("Failed to regenerate message:", error);
+    }
+  };
+
+  // Function to navigate between message versions
+  const handleVersionNavigation = async (messageId: string, direction: 'prev' | 'next') => {
+    if (!jwtToken) return;
+    
+    setMessages(prev => prev.map(msg => {
+      if (msg._id !== messageId || !msg.versions) return msg;
+      
+      const currentIndex = msg.activeVersionIndex || 0;
+      let newIndex = currentIndex;
+      
+      if (direction === 'prev' && currentIndex > 0) {
+        newIndex = currentIndex - 1;
+      } else if (direction === 'next' && currentIndex < msg.versions.length - 1) {
+        newIndex = currentIndex + 1;
+      }
+      
+      return {
+        ...msg,
+        content: msg.versions[newIndex],
+        activeVersionIndex: newIndex
+      };
+    }));
+
+    // Persist the version change to the server
+    try {
+      const currentMessage = messages.find(msg => msg._id === messageId);
+      if (currentMessage) {
+        const newIndex = direction === 'prev' 
+          ? (currentMessage.activeVersionIndex || 0) - 1
+          : (currentMessage.activeVersionIndex || 0) + 1;
+        
+        await updateMessageVersion(messageId, newIndex, jwtToken);
+      }
+    } catch (error) {
+      console.error("Failed to update message version on server:", error);
+      // Revert the local change if server update fails
+      setMessages(prev => prev.map(msg => 
+        msg._id === messageId 
+          ? { ...msg, content: msg.versions?.[msg.activeVersionIndex || 0] || msg.content }
+          : msg
+      ));
+    }
+  };
 
   const fetchAndStreamResponse = async (prompt: string) => {
     setStreaming(true);
@@ -73,9 +150,22 @@ const ChatContainer: React.FC = () => {
       setTimeout(() => scrollToBottom(outputRef), 100);
       if (assistantMessage) {
         try {
-          await createChatMessage(String(id), jwtToken!, {
+          const savedMessage = await createChatMessage(String(id), jwtToken!, {
             text: assistantMessage,
             sender: "assistant",
+          });
+          
+          // Update the message with the saved data including ID
+          setMessages(prev => {
+            const arr = [...prev];
+            const last = arr[arr.length - 1];
+            arr[arr.length - 1] = { 
+              ...last, 
+              _id: savedMessage._id,
+              versions: savedMessage.versions || [assistantMessage],
+              activeVersionIndex: savedMessage.activeVersionIndex || 0
+            };
+            return arr;
           });
         } catch (e) {
           console.error("Persist assistant failed:", e);
@@ -160,7 +250,16 @@ const ChatContainer: React.FC = () => {
     >
       <div className="flex-1 px-4 pt-4 space-y-2 py-10">
         {messages.map((msg, i) => (
-          <ChatMessage key={i} role={msg.role} content={msg.content} />
+          <ChatMessage 
+            key={i} 
+            role={msg.role} 
+            content={msg.content}
+            messageId={msg._id}
+            versions={msg.versions}
+            activeVersionIndex={msg.activeVersionIndex}
+            onRegenerate={handleRegenerateMessage}
+            onVersionNavigation={handleVersionNavigation}
+          />
         ))}
       </div>
       <form

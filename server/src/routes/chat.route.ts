@@ -227,4 +227,97 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+// POST /regenerate - Regenerate a specific assistant message
+router.post("/regenerate", async (req: Request, res: Response) => {
+  const { messageId, threadId }: { messageId: string; threadId: string } = req.body;
+
+  if (!messageId || !threadId) {
+    return res.status(400).json({ error: "Missing messageId or threadId" });
+  }
+
+  try {
+    // Find the message to regenerate
+    const message = await ChatMessage.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    if (message.sender !== "assistant") {
+      return res.status(400).json({ error: "Only assistant messages can be regenerated" });
+    }
+
+    if (message.threadId.toString() !== threadId) {
+      return res.status(400).json({ error: "Message does not belong to the specified thread" });
+    }
+
+    // Fetch conversation history up to this message
+    const history = await ChatMessage.find({ 
+      threadId, 
+      createdAt: { $lt: message.createdAt } 
+    }).sort({ createdAt: 1 });
+
+    const chatHistory = history.map((msg) => ({
+      role: msg.sender as "user" | "assistant" | "system",
+      content: msg.text,
+    }));
+
+    const systemMessage = {
+      role: "system" as const,
+      content: "You are a helpful assistant tasked with user query response. Always respond in markdown (no full-document boilerplate).",
+    };
+
+    // Find the user message that prompted this assistant response
+    const userMessage = history[history.length - 1];
+    if (!userMessage || userMessage.sender !== "user") {
+      return res.status(400).json({ error: "Cannot find user message to regenerate response for" });
+    }
+
+    const messages = [
+      systemMessage,
+      ...chatHistory.slice(0, -1), // Exclude the last user message
+      { role: "user" as const, content: userMessage.text },
+    ];
+
+    const { client, deployment } = createAzureOpenAIClient();
+    
+    const stream = await client.chat.completions.create({
+      model: deployment,
+      messages: messages,
+      temperature: 0.7,
+      stream: false, // We don't need streaming for regeneration
+    });
+
+    const newContent = stream.choices[0]?.message?.content || "";
+    
+    if (!newContent) {
+      return res.status(500).json({ error: "Failed to generate new response" });
+    }
+
+    // Update the message with new version
+    if (!message.versions) {
+      message.versions = [message.text];
+    }
+    
+    message.versions.push(newContent);
+    message.text = newContent;
+    message.activeVersionIndex = message.versions.length - 1;
+    
+    await message.save();
+
+    res.json({ 
+      success: true, 
+      message: {
+        _id: message._id,
+        text: message.text,
+        versions: message.versions,
+        activeVersionIndex: message.activeVersionIndex
+      }
+    });
+
+  } catch (error) {
+    console.error("Error regenerating message:", error);
+    res.status(500).json({ error: "Failed to regenerate message" });
+  }
+});
+
 export default router;

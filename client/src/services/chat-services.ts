@@ -15,6 +15,8 @@ export interface ChatMessageDTO {
   text: string;
   sender: "user" | "assistant";
   createdAt?: string;
+  versions?: string[];
+  activeVersionIndex?: number;
 }
 
 type AuthHeaders = { Authorization: string };
@@ -104,6 +106,42 @@ export async function fetchChatMessages(
   });
   const data = await handleJson<{ messages: ChatMessageDTO[] }>(res);
   return data.messages || [];
+}
+
+/** Regenerate a specific assistant message */
+export async function regenerateMessage(
+  messageId: string,
+  threadId: string,
+  jwtToken: string
+): Promise<ChatMessageDTO> {
+  const res = await fetch(`${API_BASE}/chat/regenerate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(jwtToken),
+    },
+    body: JSON.stringify({ messageId, threadId }),
+  });
+  const data = await handleJson<{ message: ChatMessageDTO }>(res);
+  return data.message;
+}
+
+/** Update the active version index for a message */
+export async function updateMessageVersion(
+  messageId: string,
+  activeVersionIndex: number,
+  jwtToken: string
+): Promise<ChatMessageDTO> {
+  const res = await fetch(`${API_BASE}/chat-messages/${messageId}/version`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(jwtToken),
+    },
+    body: JSON.stringify({ activeVersionIndex }),
+  });
+  const data = await handleJson<{ chatMessage: ChatMessageDTO }>(res);
+  return data.chatMessage;
 }
 
 /* ---------- (Optional) Streaming Helper ---------- */
