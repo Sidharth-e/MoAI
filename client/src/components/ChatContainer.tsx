@@ -59,14 +59,16 @@ const ChatContainer: React.FC = () => {
   const outputRef = useRef<HTMLDivElement>(null);
   const titleUpdatedRef = useRef(false);
   const maxLength = 10000;
-  let assistantMessage = "";
 
   // Function to handle message regeneration
   const handleRegenerateMessage = async (messageId: string) => {
     if (!jwtToken || !id) return;
     
+    console.log("Regenerating message:", messageId, "in thread:", id);
+    
     try {
       const regeneratedMessage = await regenerateMessage(messageId, String(id), jwtToken);
+      console.log("Regenerated message response:", regeneratedMessage);
       
       setMessages(prev => prev.map(msg => 
         msg._id === messageId 
@@ -137,13 +139,17 @@ const ChatContainer: React.FC = () => {
       content: "",
       model: selectedModel // Include model for assistant message
     }]);
+    
+    let fullAssistantMessage = ""; // Track the full message content
+    
     try {
-      assistantMessage = await streamAssistantResponse({
+      fullAssistantMessage = await streamAssistantResponse({
         prompt,
         threadId: String(id),
         jwtToken,
         model: selectedModel, // Include the selected model
         onDelta: (delta) => {
+          fullAssistantMessage += delta; // Accumulate the full message
           setMessages((prev) => {
             const arr = [...prev];
             const last = arr[arr.length - 1];
@@ -169,13 +175,16 @@ const ChatContainer: React.FC = () => {
     } finally {
       setStreaming(false);
       setTimeout(() => scrollToBottom(outputRef), 100);
-      if (assistantMessage) {
+      if (fullAssistantMessage) {
         try {
+          console.log("Saving assistant message:", { text: fullAssistantMessage.substring(0, 100), model: selectedModel });
           const savedMessage = await createChatMessage(String(id), jwtToken!, {
-            text: assistantMessage,
+            text: fullAssistantMessage,
             sender: "assistant",
             model: selectedModel, // Include the selected model
           });
+          
+          console.log("Saved assistant message:", savedMessage);
           
           // Update the message with the saved data including ID
           setMessages(prev => {
@@ -184,7 +193,7 @@ const ChatContainer: React.FC = () => {
             arr[arr.length - 1] = { 
               ...last, 
               _id: savedMessage._id,
-              versions: savedMessage.versions || [assistantMessage],
+              versions: savedMessage.versions || [fullAssistantMessage],
               activeVersionIndex: savedMessage.activeVersionIndex || 0
             };
             return arr;
@@ -209,11 +218,13 @@ const ChatContainer: React.FC = () => {
     }]);
 
     try {
-      await createChatMessage(String(id), jwtToken!, {
+      console.log("Saving user message:", { text: prompt.substring(0, 100), model: selectedModel });
+      const savedUserMessage = await createChatMessage(String(id), jwtToken!, {
         text: prompt,
         sender: "user",
         model: selectedModel, // Include the selected model
       });
+      console.log("Saved user message:", savedUserMessage);
     } catch (e) {
       console.error("Persist user message failed:", e);
     }

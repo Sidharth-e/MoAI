@@ -255,6 +255,8 @@ router.post("/", async (req: Request, res: Response) => {
 router.post("/regenerate", async (req: Request, res: Response) => {
   const { messageId, threadId }: { messageId: string; threadId: string } = req.body;
 
+  console.log("Regenerate request:", { messageId, threadId });
+
   if (!messageId || !threadId) {
     return res.status(400).json({ error: "Missing messageId or threadId" });
   }
@@ -262,6 +264,8 @@ router.post("/regenerate", async (req: Request, res: Response) => {
   try {
     // Find the message to regenerate
     const message = await ChatMessage.findById(messageId);
+    console.log("Found message:", message ? { id: message._id, sender: message.sender, text: message.text?.substring(0, 100) } : "Not found");
+    
     if (!message) {
       return res.status(404).json({ error: "Message not found" });
     }
@@ -304,39 +308,46 @@ router.post("/regenerate", async (req: Request, res: Response) => {
 
     // For regeneration, use the original model from the message to maintain consistency
     const originalModel = (message.model as AIModel) || "azure-openai"; // Fallback to azure-openai if no model stored
-    const aiService = new AIService({ 
-      model: originalModel, 
-      temperature: 0.7,
-      maxTokens: 2048
-    });
     
-        const newContent = await aiService.generateResponse(messages);
-    
-    if (!newContent) {
-      return res.status(500).json({ error: "Failed to generate new response" });
-    }
-
-    // Update the message with new version
-    if (!message.versions) {
-      message.versions = [message.text];
-    }
-    
-    message.versions.push(newContent);
-    message.text = newContent;
-    message.activeVersionIndex = message.versions.length - 1;
-    
-    await message.save();
-
-    res.json({ 
-      success: true, 
-      message: {
-        _id: message._id,
-        text: message.text,
-        model: message.model,
-        versions: message.versions,
-        activeVersionIndex: message.activeVersionIndex
+    try {
+      const aiService = new AIService({ 
+        model: originalModel, 
+        temperature: 0.7,
+        maxTokens: 2048
+      });
+      
+      const newContent = await aiService.generateResponse(messages);
+      
+      if (!newContent) {
+        return res.status(500).json({ error: "Failed to generate new response" });
       }
-    });
+
+      // Update the message with new version
+      if (!message.versions) {
+        message.versions = [message.text];
+      }
+      
+      message.versions.push(newContent);
+      message.text = newContent;
+      message.activeVersionIndex = message.versions.length - 1;
+      
+      await message.save();
+
+      res.json({ 
+        message: {
+          _id: message._id,
+          text: message.text,
+          sender: message.sender,
+          model: message.model,
+          versions: message.versions,
+          activeVersionIndex: message.activeVersionIndex,
+          createdAt: message.createdAt
+        }
+      });
+    } catch (error) {
+      console.error("Error generating response with model:", originalModel, error);
+      return res.status(500).json({ error: `Failed to generate response with ${originalModel} model` });
+    }
 
   } catch (error) {
     console.error("Error regenerating message:", error);
