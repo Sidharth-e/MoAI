@@ -19,10 +19,12 @@ import { signOut, useSession } from "next-auth/react";
 import ChatList from "./ChatList";
 import { useChatThreads } from "@/contexts/ChatThreadsContext";
 import { createChatThread } from "@/services/chat-services";
+import SettingsModal from "./SettingsModal";
 
 const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const pathname = usePathname();
   const { data: session } = useSession();
   const router = useRouter();
@@ -103,6 +105,16 @@ const Sidebar: React.FC = () => {
 
         <div className="flex-1" />
 
+        {/* Settings */}
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          aria-label="Settings"
+          title="Settings"
+          className={getItemClasses(false)}
+        >
+          <FiSettings size={22} />
+        </button>
+
         {/* Logout */}
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
@@ -138,6 +150,12 @@ const Sidebar: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Settings Modal */}
+      <SettingsModal 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </aside>
   );
 };
