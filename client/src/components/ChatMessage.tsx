@@ -10,6 +10,7 @@ type ChatMessageProps = {
   content: string;
   agentName?: string;
   messageId?: string;
+  model?: string; // AI model used for the message
   versions?: string[];
   activeVersionIndex?: number;
   onRegenerate?: (messageId: string) => Promise<void>;
@@ -26,6 +27,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   content, 
   agentName, 
   messageId, 
+  model,
   versions, 
   activeVersionIndex, 
   onRegenerate, 
@@ -72,6 +74,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         {/* Show agent name if present and assistant */}
         {isAssistant && agentName && (
           <div className="text-xs text-blue-600 dark:text-blue-300 font-semibold mb-1">{agentName}</div>
+        )}
+        {/* Show model information for assistant messages */}
+        {isAssistant && model && (
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+            Model: {model === "azure-openai" ? "Azure OpenAI (GPT-4)" : 
+                   model === "gemini" ? "Google Gemini 2.5 Flash" : 
+                   model === "huggingface" ? "Hugging Face" : model}
+          </div>
         )}
         <div className="prose prose-slate dark:prose-invert max-w-none transition-all duration-500">
           <ReactMarkdown

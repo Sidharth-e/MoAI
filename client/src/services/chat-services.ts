@@ -14,6 +14,7 @@ export interface ChatMessageDTO {
   _id: string;
   text: string;
   sender: "user" | "assistant";
+  model?: string; // AI model used for the message
   createdAt?: string;
   versions?: string[];
   activeVersionIndex?: number;
@@ -79,7 +80,7 @@ export async function updateChatThreadTitle(
 export async function createChatMessage(
   threadId: string,
   jwtToken: string,
-  message: Pick<ChatMessageDTO, "text" | "sender">
+  message: Pick<ChatMessageDTO, "text" | "sender"> & { model?: string }
 ): Promise<ChatMessageDTO> {
   const res = await fetch(`${API_BASE}/chat-messages/${threadId}`, {
     method: "POST",
@@ -154,13 +155,13 @@ export async function streamAssistantResponse(
     prompt: string;
     threadId: string;
     jwtToken?: string;
+    model?: string;
     onDelta: (chunk: string) => void;
     onError?: (err: unknown) => void;
   }
 ): Promise<string> {
-  const { prompt, threadId, jwtToken, onDelta, onError } = params;
+  const { prompt, threadId, jwtToken, model = "azure-openai", onDelta, onError } = params;
   let full = "";
-
   try {
     const res = await fetch(`${API_BASE}/chat`, {
       method: "POST",
@@ -168,7 +169,7 @@ export async function streamAssistantResponse(
         "Content-Type": "application/json",
         ...authHeaders(jwtToken),
       },
-      body: JSON.stringify({ userMessage: prompt, threadId }),
+      body: JSON.stringify({ userMessage: prompt, threadId, model }),
     });
 
     if (!res.body) throw new Error("No response body for stream");

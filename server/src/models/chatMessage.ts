@@ -8,6 +8,7 @@ const chatMessageSchema = new Schema<IChatMessage>({
   threadId: { type: mongoose.Schema.Types.ObjectId, ref: "ChatThread", required: true },
   sender: { type: String, enum: ["user", "assistant","tool"], required: true },
   text: { type: String, required: true },
+  model: { type: String, required: false }, // AI model used for the message
   versions: { 
     type: [String], 
     default: function(this: any) {
@@ -43,6 +44,7 @@ const validate = (data: Record<string, any>): ValidationResult => {
     threadId: Joi.string().required().label("Thread ID"),
     sender: Joi.string().valid("user", "assistant","tool").required().label("Sender"),
     text: Joi.string().required().label("Message Text"),
+    model: Joi.string().optional().label("AI Model"),
   });
   return schema.validate(data);
 };

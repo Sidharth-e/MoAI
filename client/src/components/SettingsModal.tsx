@@ -1,6 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Settings as SettingsIcon, Moon, Sun, Volume2, VolumeX, Palette, Globe, Shield, User, Bell, Bot, MessageSquare, Zap, Eye, EyeOff, Database, Smartphone, Monitor } from "lucide-react";
+import { useModel } from "@/contexts/ModelContext";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ interface SettingOption {
 type SettingsTab = "general" | "ai" | "privacy" | "advanced";
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const { selectedModel, setSelectedModel } = useModel();
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [settings, setSettings] = useState({
     // General settings
@@ -34,7 +36,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     fontSize: "medium",
     
     // AI settings
-    model: "gpt-4",
+    model: selectedModel,
     temperature: 0.7,
     maxTokens: "2048",
     conversationMemory: true,
@@ -60,7 +62,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       ...prev,
       [key]: value
     }));
+    
+    // Update global model context when model changes
+    if (key === "model") {
+      setSelectedModel(value);
+    }
   };
+
+  // Sync settings with global model context
+  useEffect(() => {
+    setSettings(prev => ({
+      ...prev,
+      model: selectedModel
+    }));
+  }, [selectedModel]);
 
   const generalSettings: SettingOption[] = [
     {
@@ -140,11 +155,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       type: "select",
       value: settings.model,
       options: [
-        { label: "GPT-4 (Recommended)", value: "gpt-4" },
-        { label: "GPT-3.5 Turbo", value: "gpt-3.5-turbo" },
-        { label: "Claude 3 Opus", value: "claude-3-opus" },
-        { label: "Claude 3 Sonnet", value: "claude-3-sonnet" },
-        { label: "Gemini Pro", value: "gemini-pro" }
+        { label: "Azure OpenAI (GPT-4)", value: "azure-openai" },
+        { label: "Google Gemini 2.5 Flash", value: "gemini" },
+        { label: "Hugging Face", value: "huggingface" }
       ],
       icon: <Bot className="w-5 h-5" />
     },

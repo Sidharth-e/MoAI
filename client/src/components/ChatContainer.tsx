@@ -13,11 +13,13 @@ import {
   updateMessageVersion,
 } from "@/services/chat-services";
 import { useChatThreads } from "@/contexts/ChatThreadsContext";
+import { useModel } from "@/contexts/ModelContext";
 
 type Message = { 
   _id: string;
   role: "user" | "assistant"; 
   content: string;
+  model?: string; // AI model used for the message
   versions?: string[];
   activeVersionIndex?: number;
 };
@@ -32,6 +34,7 @@ const mapMessage = (m: any): Message => {
     _id: m._id ? String(m._id) : `fallback-${Date.now()}`,
     role: m.sender === "user" ? "user" : "assistant",
     content: m.text,
+    model: m.model, // Include the model field
     versions: m.versions || [m.text],
     activeVersionIndex: m.activeVersionIndex || 0,
   };
@@ -52,6 +55,7 @@ const ChatContainer: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const { selectedModel, setSelectedModel } = useModel();
   const outputRef = useRef<HTMLDivElement>(null);
   const titleUpdatedRef = useRef(false);
   const maxLength = 10000;
@@ -69,6 +73,7 @@ const ChatContainer: React.FC = () => {
           ? {
               ...msg,
               content: regeneratedMessage.text,
+              model: regeneratedMessage.model || msg.model, // Preserve or update model info
               versions: regeneratedMessage.versions || [regeneratedMessage.text],
               activeVersionIndex: regeneratedMessage.activeVersionIndex || 0
             }
@@ -98,7 +103,8 @@ const ChatContainer: React.FC = () => {
       return {
         ...msg,
         content: msg.versions[newIndex],
-        activeVersionIndex: newIndex
+        activeVersionIndex: newIndex,
+        model: msg.model // Preserve model information
       };
     }));
 
@@ -125,12 +131,18 @@ const ChatContainer: React.FC = () => {
 
   const fetchAndStreamResponse = async (prompt: string) => {
     setStreaming(true);
-    setMessages((prev) => [...prev, { _id: `temp-${Date.now()}`, role: "assistant", content: "" }]);
+    setMessages((prev) => [...prev, { 
+      _id: `temp-${Date.now()}`, 
+      role: "assistant", 
+      content: "",
+      model: selectedModel // Include model for assistant message
+    }]);
     try {
       assistantMessage = await streamAssistantResponse({
         prompt,
         threadId: String(id),
         jwtToken,
+        model: selectedModel, // Include the selected model
         onDelta: (delta) => {
           setMessages((prev) => {
             const arr = [...prev];
@@ -143,7 +155,12 @@ const ChatContainer: React.FC = () => {
         onError: () => {
           setMessages((prev) => [
             ...prev.slice(0, -1),
-            { _id: `error-${Date.now()}`, role: "assistant", content: ERROR_MSG },
+            { 
+              _id: `error-${Date.now()}`, 
+              role: "assistant", 
+              content: ERROR_MSG,
+              model: selectedModel // Include model for error message
+            },
           ]);
         },
       });
@@ -157,6 +174,7 @@ const ChatContainer: React.FC = () => {
           const savedMessage = await createChatMessage(String(id), jwtToken!, {
             text: assistantMessage,
             sender: "assistant",
+            model: selectedModel, // Include the selected model
           });
           
           // Update the message with the saved data including ID
@@ -183,12 +201,18 @@ const ChatContainer: React.FC = () => {
     if (!input.trim() || streaming) return;
     const prompt = input;
     setInput("");
-    setMessages((msgs) => [...msgs, { _id: `temp-user-${Date.now()}`, role: "user", content: prompt }]);
+    setMessages((msgs) => [...msgs, { 
+      _id: `temp-user-${Date.now()}`, 
+      role: "user", 
+      content: prompt,
+      model: selectedModel // Include model for user message
+    }]);
 
     try {
       await createChatMessage(String(id), jwtToken!, {
         text: prompt,
         sender: "user",
+        model: selectedModel, // Include the selected model
       });
     } catch (e) {
       console.error("Persist user message failed:", e);
@@ -212,7 +236,12 @@ const ChatContainer: React.FC = () => {
       } catch (e) {
         if (!cancelled) {
           console.error(e);
-            setMessages([{ _id: `error-history-${Date.now()}`, role: "assistant", content: ERROR_HISTORY_MSG }]);
+            setMessages([{ 
+              _id: `error-history-${Date.now()}`, 
+              role: "assistant", 
+              content: ERROR_HISTORY_MSG,
+              model: selectedModel // Include model for error history message
+            }]);
         }
       }
     };
@@ -259,6 +288,7 @@ const ChatContainer: React.FC = () => {
             key={i} 
             role={msg.role} 
             content={msg.content}
+            model={msg.model}
             messageId={msg._id}
             versions={msg.versions}
             activeVersionIndex={msg.activeVersionIndex}
@@ -267,6 +297,22 @@ const ChatContainer: React.FC = () => {
           />
         ))}
       </div>
+      {/* Model Selector */}
+      <div className="sticky bottom-20 left-0 w-full max-w-2xl mx-auto mb-2">
+        <div className="flex items-center justify-center">
+          <select
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value as any)}
+            disabled={streaming}
+            className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 px-3 py-2"
+          >
+            <option value="azure-openai">Azure OpenAI (GPT-4)</option>
+            <option value="gemini">Google Gemini 2.5 Flash</option>
+            <option value="huggingface">Hugging Face</option>
+          </select>
+        </div>
+      </div>
+
       <form
         onSubmit={handleSubmit}
         autoComplete="off"

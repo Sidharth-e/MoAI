@@ -9,6 +9,7 @@
     "inspector": "npx @modelcontextprotocol/inspector index.js"
   },
   "dependencies": {
+    "@google/genai": "^1.15.0",
     "@huggingface/inference": "^4.4.0",
     "@mendable/firecrawl-js": "^1.29.1",
     "@modelcontextprotocol/sdk": "^1.16.0",

@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { ChatMessage } from "../models/chatMessage";
+import { AIService, AIModel } from "../services/ai-service";
 import { createAzureOpenAIClient } from "../services/aoai";
 import { getWeather } from "../tools/getWeather";
 import { getSerperWebData } from "../tools/getSerperWebData";
@@ -12,8 +13,11 @@ dotenv.config();
 const router = express.Router();
 // POST /chat - Handle user messages and stream responses
 router.post("/", async (req: Request, res: Response) => {
-  const { userMessage, threadId }: { userMessage: string; threadId: string } =
-    req.body;
+  const { userMessage, threadId, model = "azure-openai" }: { 
+    userMessage: string; 
+    threadId: string;
+    model?: AIModel;
+  } = req.body;
 
   if (!userMessage || typeof userMessage !== "string") {
     return res.status(400).json({ error: "Missing or invalid userMessage" });
@@ -125,93 +129,113 @@ router.post("/", async (req: Request, res: Response) => {
     let toolLoop = true;
     let lastResponse = null;
 
-    while (toolLoop) {
-      // Start streaming from OpenAI
-      const stream = await client.chat.completions.create({
-        model: deployment,
-        messages: currentMessages,
-        temperature: 0.7,
-        stream: true,
-        tools: [...mcpTools],
-      });
+    // For now, we'll use Azure OpenAI for tool calls since other models don't support them
+    // In the future, we can implement tool calling for other models
+    if (model === "azure-openai") {
+      const { client, deployment } = createAzureOpenAIClient();
+      while (toolLoop) {
+        // Start streaming from OpenAI
+        const stream = await client.chat.completions.create({
+          model: deployment,
+          messages: currentMessages,
+          temperature: 0.7,
+          stream: true,
+          tools: [...mcpTools],
+        });
 
-      let toolCalls: any[] = [];
-      let assistantMessage: any = { role: "assistant", content: "" };
-      let toolCallDetected = false;
+        let toolCalls: any[] = [];
+        let assistantMessage: any = { role: "assistant", content: "" };
+        let toolCallDetected = false;
 
-      for await (const chunk of stream) {
-        if (chunk.choices?.length) {
-          const choice = chunk.choices[0];
-          // If tool_calls is present, collect tool calls
-          if (choice.delta?.tool_calls) {
-            toolCallDetected = true;
-            for (const tc of choice.delta.tool_calls) {
-              // Accumulate tool calls (arguments may be streamed in pieces)
-              let existing = toolCalls.find((t) => t.index === tc.index);
-              if (!existing) {
-                toolCalls.push({ ...tc, arguments: tc.function?.arguments || "" });
-              } else {
-                // Append streamed arguments
-                existing.function = existing.function || {};
-                existing.function.arguments = (existing.function.arguments || "") + (tc.function?.arguments || "");
+        for await (const chunk of stream) {
+          if (chunk.choices?.length) {
+            const choice = chunk.choices[0];
+            // If tool_calls is present, collect tool calls
+            if (choice.delta?.tool_calls) {
+              toolCallDetected = true;
+              for (const tc of choice.delta.tool_calls) {
+                // Accumulate tool calls (arguments may be streamed in pieces)
+                let existing = toolCalls.find((t) => t.index === tc.index);
+                if (!existing) {
+                  toolCalls.push({ ...tc, arguments: tc.function?.arguments || "" });
+                } else {
+                  // Append streamed arguments
+                  existing.function = existing.function || {};
+                  existing.function.arguments = (existing.function.arguments || "") + (tc.function?.arguments || "");
+                }
               }
             }
+            // If content is present, stream to client
+            if (choice.delta?.content) {
+              assistantMessage.content += choice.delta.content;
+              sendData(chunk);
+            }
           }
-          // If content is present, stream to client
-          if (choice.delta?.content) {
-            assistantMessage.content += choice.delta.content;
-            sendData(chunk);
+        }
+
+        if (toolCallDetected && toolCalls.length > 0) {
+          // Execute each tool call and build tool message(s)
+          const toolMessages = [];
+          for (const tc of toolCalls) {
+            const toolName = tc.function?.name;
+            const argsStr = tc.function?.arguments;
+            let args = {};
+            try {
+              args = JSON.parse(argsStr);
+            } catch (e) {
+              args = {};
+            }
+            const handler = toolHandlers[toolName];
+            let toolResult = "";
+            if (handler) {
+              try {
+                const result = await handler(args);
+                if (typeof result === "string") {
+                  toolResult = result;
+                } else if (result && Array.isArray(result.content) && result.content[0]?.text) {
+                  toolResult = result.content[0].text;
+                } else {
+                  toolResult = JSON.stringify(result);
+                }
+              } catch (e) {
+                toolResult = `Error: ${e}`;
+              }
+            } else {
+              toolResult = `No handler for tool: ${toolName}`;
+            }
+            const toolMsg: ChatMessageParam = {
+              role: "tool",
+              tool_call_id: String(tc.id),
+              content: toolResult,
+            };
+            toolMessages.push(toolMsg);
           }
+          // Add tool messages to conversation and continue loop
+          currentMessages.push({ ...assistantMessage, content: undefined, tool_calls: toolCalls });
+          currentMessages.push(...toolMessages);
+        } else {
+          // No tool call, finish streaming
+          if (assistantMessage.content) {
+            // Send final chunk if not already sent
+            sendData({ choices: [{ delta: { content: "" } }] });
+          }
+          break;
         }
       }
-
-      if (toolCallDetected && toolCalls.length > 0) {
-        // Execute each tool call and build tool message(s)
-        const toolMessages = [];
-        for (const tc of toolCalls) {
-          const toolName = tc.function?.name;
-          const argsStr = tc.function?.arguments;
-          let args = {};
-          try {
-            args = JSON.parse(argsStr);
-          } catch (e) {
-            args = {};
-          }
-          const handler = toolHandlers[toolName];
-          let toolResult = "";
-          if (handler) {
-            try {
-              const result = await handler(args);
-              if (typeof result === "string") {
-                toolResult = result;
-              } else if (result && Array.isArray(result.content) && result.content[0]?.text) {
-                toolResult = result.content[0].text;
-              } else {
-                toolResult = JSON.stringify(result);
-              }
-            } catch (e) {
-              toolResult = `Error: ${e}`;
-            }
-          } else {
-            toolResult = `No handler for tool: ${toolName}`;
-          }
-          const toolMsg: ChatMessageParam = {
-            role: "tool",
-            tool_call_id: String(tc.id),
-            content: toolResult,
-          };
-          toolMessages.push(toolMsg);
-        }
-        // Add tool messages to conversation and continue loop
-        currentMessages.push({ ...assistantMessage, content: undefined, tool_calls: toolCalls });
-        currentMessages.push(...toolMessages);
-      } else {
-        // No tool call, finish streaming
-        if (assistantMessage.content) {
-          // Send final chunk if not already sent
-          sendData({ choices: [{ delta: { content: "" } }] });
-        }
-        break;
+    } else {
+      // For other models (Gemini, Hugging Face), use the unified AI service
+      try {
+        const aiService = new AIService({ 
+          model, 
+          temperature: 0.7,
+          maxTokens: 2048
+        });
+        await aiService.generateStreamingResponse(messages, (chunk: string) => {
+          sendData({ choices: [{ delta: { content: chunk } }] });
+        });
+      } catch (error) {
+        console.error(`Error with ${model} model:`, error);
+        sendData({ choices: [{ delta: { content: `Error: Failed to generate response with ${model} model` } }] });
       }
     }
     // Signal completion
@@ -278,16 +302,15 @@ router.post("/regenerate", async (req: Request, res: Response) => {
       { role: "user" as const, content: userMessage.text },
     ];
 
-    const { client, deployment } = createAzureOpenAIClient();
-    
-    const stream = await client.chat.completions.create({
-      model: deployment,
-      messages: messages,
+    // For regeneration, use the original model from the message to maintain consistency
+    const originalModel = (message.model as AIModel) || "azure-openai"; // Fallback to azure-openai if no model stored
+    const aiService = new AIService({ 
+      model: originalModel, 
       temperature: 0.7,
-      stream: false, // We don't need streaming for regeneration
+      maxTokens: 2048
     });
-
-    const newContent = stream.choices[0]?.message?.content || "";
+    
+        const newContent = await aiService.generateResponse(messages);
     
     if (!newContent) {
       return res.status(500).json({ error: "Failed to generate new response" });
@@ -309,6 +332,7 @@ router.post("/regenerate", async (req: Request, res: Response) => {
       message: {
         _id: message._id,
         text: message.text,
+        model: message.model,
         versions: message.versions,
         activeVersionIndex: message.activeVersionIndex
       }
